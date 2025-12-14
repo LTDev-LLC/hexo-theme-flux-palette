@@ -7,39 +7,52 @@ A responsive blog/journal [Hexo](https://hexo.io/) theme designed around the ide
 - [Features](#features)
 - [Install](#install)
 - [Configuration](#configuration)
-    *  Default [_config.yml](#_config.yml)
+  * Default [_config.yml](#_config.yml)
 
 ## Features
+
 - Mobile friendly
 - Multiple [color palettes](/source/css/palettes/)
-    * Has support for user selection via select dropdown or can be disabled within the config.
+  * Has support for user selection via select dropdown or can be disabled within the config.
 - Password encrypted posts
 - Pre-compile JavaScript via [swc](https://swc.rs/)
-    * Intended for compiling post decryption JavaScript; will compile anything sent to the UI.
+  * Intended for compiling post decryption JavaScript; will compile anything sent to the UI.
 - Approx. read time (default 238 wpm)
 - RSS feed generator
 - URL shortener/post hash generator
 - Archived post listing
 
 ## Install
-1. In the `root` directory:
-    * Optionally, install `@swc/core` for use with pre-compilation.
 
-    ```git
-    $ git clone https://github.com/LouisT/flux-palette.git themes/flux-palette
-    $ npm install @swc/core --save
-    ```
+1. In the `root` directory:
+   * Optionally, install `@swc/core` for use with pre-compilation.
+
+```git
+$ git clone https://github.com/LouisT/flux-palette.git themes/flux-palette
+$ npm install @swc/core --save
+```
+
+OR, if pushing your root to git, use as a git sub module:
+
+```
+$ git submodule add git@github.com:LouisT/flux-palette.git themes/flux-palette
+$ npm install @swc/core --save
+```
 
 2. Change the `theme` property in the `config.yml` file.
-    ```yml
-    theme: flux-palette
-    ```
+
+```yml
+theme: flux-palette
+```
+
 3. Run: `hexo clean ; hexo g ; hexo s`
 
 ## Configuration
 
 ### Password protected posts
+
 This is done in the front matter. Any post with `password` will be encrypted by that password.
+
 ```yml
 ---
 title: Example Post
@@ -49,8 +62,10 @@ password: password-goes-here
 ```
 
 ### Read Time
+
 The front matter if your posts will be updated with the estimated read time information.
 Can be disabled; see [_config.yml](#_config.yml) below.
+
 ```yml
 ---
 title: Example Post
@@ -61,7 +76,9 @@ read_time_words: 764
 ```
 
 ### _config.yml
+
 Below is the default config for Flux Palette found within [_config.yml](/_config.yml).
+
 ```yml
 menu: # site menu
   Home: /
@@ -98,5 +115,4 @@ palette_selector: # palette selector
   default: abyssal-blue # default palette selection
   palette_folder: css/palettes # folder for palette css files
 ```
-
 
