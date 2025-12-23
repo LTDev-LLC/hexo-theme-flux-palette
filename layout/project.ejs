@@ -11,7 +11,7 @@
       <%= date(page.project.date, config.date_format || 'YYYY-MM-DD') %>
     </time>
     <% if (page.project.project_tags && page.project.project_tags.length) { %>
-    <span class="meta-sep">•</span>
+    <span class="meta-sep">-</span>
     <span>
       <% page.project.project_tags.forEach(function(tag, i) { %>
       <%= tag %><%= i < page.project.project_tags.length - 1 ? ', ' : '' %>

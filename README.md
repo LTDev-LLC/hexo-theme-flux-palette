@@ -88,7 +88,6 @@ social:
   - name: Website
     url: https://flux-palette.pages.dev/
     icon: material-symbols:link
-
 ```
 
 ### Projects listings
@@ -109,6 +108,26 @@ project_tags:
 ---
 This is a post about my project...
 ```
+
+### Spotify embeds
+You can embed sptofy tracks and playlists within either the blog or project postings using a spotify short tag.
+```yml
+---
+title: Flux Palette
+date: 2025-12-1
+project_url: https://github.com/LouisT/flux-palette
+project_summary: "The Flux Palette source."
+project_tags:
+  - javascript
+  - hexo
+---
+Here is a song:
+{% spotify https://open.spotify.com/track/3cLqK3LPVrTIzfENVmYLoU?si=eb784dc3ebe142a1 %}
+Here is a playlist:
+{% spotify https://open.spotify.com/playlist/1LcfcxzGNcselP4PIGeQ6V?si=334458bd434b42ce %}
+Rest of the post...
+```
+
 
 ### _config.yml
 

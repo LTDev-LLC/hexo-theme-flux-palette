@@ -3,102 +3,61 @@ let fs = require('fs'),
     path = require('path'),
     fm = require('hexo-front-matter');
 
-// Use in-memory object to store projects,
-// downside is hexo server must be restarted to update
-const projectsListing = [];
+// Cache to prevent infinite loops during generation
+let projectsCache = null;
 
-// Load projects from source/_projects/*.md (file-based projects)
-function loadFolderProjects(ctx, baseDir) {
-    if (projectsListing.length)
-        return projectsListing; // already loaded
+// Load all projects from the _projects folder
+async function loadProjects(ctx) {
+    if (projectsCache)
+        return projectsCache;
 
-    // Check if source/_projects exists
-    const base = path.join(baseDir || ctx.base_dir, 'source', '_projects');
+    const base = path.join(ctx.base_dir, 'source', '_projects');
     if (!fs.existsSync(base))
         return [];
 
-    // Read all Markdown files
-    const entries = fs.readdirSync(base, { withFileTypes: true }),
-        mdFiles = entries
-            .filter(entry => entry.isFile())
-            .map(entry => entry.name)
-            .filter(name => /\.(md|markdown)$/i.test(name));
+    const mdFiles = fs.readdirSync(base).filter(name => /\.(md|markdown)$/i.test(name)),
+        projects = [];
 
-    // Parse each file, and add it to the projects array
-    mdFiles.forEach(filename => {
-        const full = path.join(base, filename);
-        let raw;
-        try {
-            raw = fs.readFileSync(full, 'utf8');
-        } catch (err) {
-            ctx.log.error('[theme_projects] Failed to read project file:', full);
-            ctx.log.error(err);
-            return;
-        }
-
-        let parsed;
-        try {
+    for (const filename of mdFiles) {
+        const fullPath = path.join(base, filename),
+            raw = fs.readFileSync(fullPath, 'utf8'),
             parsed = fm.parse(raw);
-        } catch (err) {
-            ctx.log.error('[theme_projects] Failed to parse front matter for:', full);
-            ctx.log.error(err);
-            return;
-        }
 
-        // Build the project object
-        const body = parsed._content || '',
-            content = parsed._content,
-            slug = parsed.slug || filename.replace(/\.(md|markdown)$/i, ''),
-            stat = fs.statSync(full),
-            date = parsed.date ? new Date(parsed.date) : stat.mtime;
+        // Prepare the data object for Hexo's internal post renderer
+        const data = {
+            content: parsed._content,
+            full_source: fullPath,
+            source: filename
+        };
 
-        // Render the markdown
-        let rendered = '';
-        try {
-            rendered = ctx.render.renderSync({
-                text: body,
-                engine: 'markdown',
-                path: full // helps some renderers with relative paths
-            });
-        } catch (err) {
-            ctx.log.error('[theme_projects] Failed to render markdown for:', full);
-            ctx.log.error(err);
-            rendered = body; // fallback: raw markdown if render fails
-        }
+        // Passing 'null' prevents Hexo from trying to read the file again
+        await ctx.post.render(null, data);
+        const slug = parsed.slug || filename.replace(/\.(md|markdown)$/i, ''),
+            stat = fs.statSync(fullPath);
 
-        // Add the project to the projects array
-        projectsListing.push({
-            source: full,
-            type: 'file',
-            slug,
+        // data.content has now been transformed into HTML by Hexo
+        // Store the project entry
+        projects.push({
+            ...parsed,
+            content: data.content,   // The fully processed body HTML
+            slug: slug,
             path: `projects/${slug}/`,
-            title: parsed.title || slug,
-            date,
-            password: parsed.password || '',
-            project_url: parsed.project_url || '',
-            project_summary: parsed.project_summary || '',
-            project_tags: parsed.project_tags || parsed.tags || [],
-            content_raw: content,
-            content: rendered,
-            raw: parsed
+            date: parsed.date ? new Date(parsed.date) : stat.mtime,
+            project_tags: parsed.project_tags || parsed.tags || []
         });
-    });
+    }
 
-    // Sort projects by date
-    projectsListing.sort(function (a, b) { return b.date - a.date; });
-
-    // Sort projects by date
-    return projectsListing;
+    return (projectsCache = projects.sort((a, b) => b.date - a.date));
 }
 
 // Generator: /projects + paginated pages + project detail pages
-hexo.extend.generator.register('theme_projects', function (locals) {
+hexo.extend.generator.register('theme_projects', async function (locals) {
     const theme = this.theme.config || {},
         projCfg = theme.projects || {},
         title = projCfg.title || 'Projects'; // Projects title, defaults to "Projects", not currently used
 
     // Load all projects
-    let allProjects = loadFolderProjects(this, hexo.base_dir);
+    let allProjects = await loadProjects(this, hexo.base_dir);
     if (!allProjects.length)
         return [];
 
@@ -166,22 +125,7 @@ hexo.extend.generator.register('theme_projects', function (locals) {
     return routes;
 });
 
-// Get a list of recent projects for the sidebar
-hexo.extend.helper.register('recent_projects', function (limit) {
-    const ctx = this,
-        themeCfg = ctx.theme.config || {},
-        sidebarCfg = themeCfg.sidebar && themeCfg.sidebar.recent_projects || {},
-        enabled = sidebarCfg.enabled !== false;
-
-    // If called from sidebar and it's disabled, respect that
-    if (!enabled && !limit)
-        return [];
-
-    // Load all projects
-    const all = loadFolderProjects(ctx, hexo.base_dir);
-    if (!all.length)
-        return [];
-
-    // Return "limit" items
-    return all.slice(0, limit || sidebarCfg.limit || 5);
+// Helper for sidebar (Note: Helpers must be synchronous, so we use the cache)
+hexo.extend.helper.register('recent_projects', function (limit = 5) {
+    return (projectsCache || []).slice(0, limit);
 });

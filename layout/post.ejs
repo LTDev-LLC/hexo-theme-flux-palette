@@ -4,10 +4,12 @@
   </h2>
   <div class="post-meta">
     <time datetime="<%= date_xml(page.date) %>">
-      <%= date(page.date, config.date_format || 'YYYY-MM-DD') %>&nbsp;-&nbsp;<%= read_time(page, true) %>
+      <%= date(page.date, config.date_format || 'YYYY-MM-DD') %>
+      <span class="meta-sep">-</span>
+      <%= read_time(page, true) %>
     </time>
     <% if (page.categories && page.categories.length) { %>
-    <span class="meta-sep">•</span>
+    <span class="meta-sep">-</span>
     <% page.categories.forEach(function(cat, i) { %>
     <a href="<%= url_for(cat.path) %>"><%= cat.name %></a><%= i < page.categories.length - 1 ? ', ' : '' %>
     <% }) %>
