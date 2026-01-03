@@ -7,6 +7,10 @@ function detectPlatformFromUrl(url) {
         return 'spotify';
     if (/vimeo\.com/.test(url))
         return 'vimeo';
+    if (/twitch\.tv/.test(url))
+        return 'twitch';
+    if (/tiktok\.com/.test(url))
+        return 'tiktok';
     return null;
 }
 
@@ -147,6 +151,112 @@ function generateVimeoEmbed(input) {
     ].join('\n');
 }
 
+// Twitch video and channel types
+const TWITCH_TYPES = new Set(['video', 'channel']);
+
+// Extract Twitch video or channel reference
+function extractTwitchRef(input, forcedType) {
+    if (!input)
+        return null;
+    const str = String(input).trim(),
+        typeHint = forcedType && TWITCH_TYPES.has(forcedType) ? forcedType : null;
+
+    // Video URL
+    let match = str.match(/twitch\.tv\/videos\/(\d+)/);
+    if (match)
+        return { type: 'video', id: match[1] };
+
+    // Channel URL
+    match = str.match(/twitch\.tv\/([a-zA-Z0-9_]+)\/?$/);
+    if (match) {
+        const id = match[1];
+        if (id.toLowerCase() !== 'videos')
+            return { type: 'channel', id: id };
+    }
+
+    if (typeHint) {
+        if (typeHint === 'video' && /^\d+$/.test(str))
+            return { type: 'video', id: str };
+        if (typeHint === 'channel' && /^[a-zA-Z0-9_]+$/.test(str))
+            return { type: 'channel', id: str };
+    }
+
+    // Guess type for naked IDs
+    if (/^\d+$/.test(str))
+        return { type: 'video', id: str };
+    if (/^[a-zA-Z0-9_]+$/.test(str))
+        return { type: 'channel', id: str };
+
+    return null;
+}
+
+// Generate Twitch embed
+function generateTwitchEmbed(input, forcedType) {
+    const ref = extractTwitchRef(input, forcedType);
+    if (!ref)
+        return '';
+
+    // Extract type and ID
+    const { type, id } = ref,
+        url = new URL(hexo.config.url),
+        parent = url.hostname;
+
+    // Build embed URL
+    let embedUrl;
+    if (type === 'video') {
+        embedUrl = `https://player.twitch.tv/?video=${id}&parent=${parent}`;
+    } else { // channel
+        embedUrl = `https://player.twitch.tv/?channel=${id}&parent=${parent}`;
+    }
+
+    // Return the embed
+    return [
+        '<div class="video-embed-container">',
+        '  <iframe',
+        '    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"',
+        '    src="' + embedUrl + '"',
+        '    frameborder="0"',
+        '    allow="autoplay; fullscreen"',
+        '    allowfullscreen',
+        '    loading="lazy"',
+        '  ></iframe>',
+        '</div>'
+    ].join('\n');
+}
+
+// Extract TikTok video info
+function extractTikTokInfo(input) {
+    if (!input) return null;
+    const str = String(input).trim();
+    let match;
+
+    match = str.match(/(https?:\/\/(?:www\.)?tiktok\.com\/@.+?\/video\/(\d+))/);
+    if (match)
+        return { url: match[1], id: match[2] };
+
+    if (/^\d+$/.test(str))
+        return { url: null, id: str };
+
+    return null;
+}
+
+// Generate TikTok embed
+function generateTikTokEmbed(input) {
+    const info = extractTikTokInfo(input);
+    if (!info)
+        return '';
+
+    // Return the embed
+    const citeAttr = info.url ? `cite="${info.url}"` : '';
+    return [
+        `<blockquote class="tiktok-embed" ${citeAttr} data-video-id="${info.id}" style="max-width: 605px;min-width: 325px;" >`,
+        `<section></section>`,
+        `</blockquote>`,
+        `<script async src="https://www.tiktok.com/embed.js"></script>`
+    ].join('');
+}
+
+
 // Generic 'embed' tag
 //      {% embed <url/id> [hint] %}
 //      {% embed <url/id> youtube %}
@@ -167,10 +277,15 @@ hexo.extend.tag.register('embed', function (args) {
             return generateYouTubeEmbed(input);
         case 'spotify':
             // For {% embed <id> spotify track %}
-            const forcedType = (args.length > 2 && SPOTIFY_TYPES.has(args[2].toLowerCase())) ? args[2].toLowerCase() : null;
-            return generateSpotifyEmbed(input, forcedType);
+            const forcedSpotifyType = (args.length > 2 && SPOTIFY_TYPES.has(args[2].toLowerCase())) ? args[2].toLowerCase() : null;
+            return generateSpotifyEmbed(input, forcedSpotifyType);
         case 'vimeo':
             return generateVimeoEmbed(input);
+        case 'twitch':
+            const forcedTwitchType = (args.length > 2 && TWITCH_TYPES.has(args[2].toLowerCase())) ? args[2].toLowerCase() : null;
+            return generateTwitchEmbed(input, forcedTwitchType);
+        case 'tiktok':
+            return generateTikTokEmbed(input);
         default:
             return '';
     }
@@ -184,6 +299,11 @@ const embedTags = {
         return generateSpotifyEmbed(args[0], forcedType);
     },
     vimeo: (args) => generateVimeoEmbed(args.join(' ')),
+    twitch: (args) => {
+        const forcedType = (args.length == 2 && TWITCH_TYPES.has(args[1].toLowerCase())) ? args[1].toLowerCase() : null;
+        return generateTwitchEmbed(args[0], forcedType);
+    },
+    tiktok: (args) => generateTikTokEmbed(args.join(' ')),
 };
 
 // Loop the embed tags and register them

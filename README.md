@@ -79,7 +79,9 @@ read_time_words: 764
 ```
 
 ### Social listings
+
 You can display social links/icons in the sidenav by adding a `social` config to either the root `_config.yml` or the theme config.
+
 ```yml
 social:
   - name: GitHub
@@ -110,33 +112,66 @@ This is a post about my project...
 ```
 
 ### Embeds
-You can embed content from various platforms like YouTube, Spotify, and Vimeo within your posts using a powerful `embed` tag.
+
+You can embed content from various platforms like YouTube, Spotify, Vimeo, Twitch, and TikTok within your posts using a powerful `embed` tag.
 
 The plugin can automatically detect the platform from a URL.
+
+**Generic `embed` tag:**
+
+The generic `embed` tag is the most flexible way to embed content.
+
+```
+{% embed <url/id> [platform_hint] [type_hint] %}
+```
+
+-   `<url/id>`: The full URL or the ID of the content to embed.
+-   `[platform_hint]`: (Optional) If you use an ID instead of a URL, you must provide a platform hint. Supported platforms: `youtube`, `spotify`, `vimeo`, `twitch`, `tiktok`.
+-   `[type_hint]`: (Optional) For Spotify, you can specify `track`, `playlist`, or `artist`. For Twitch, you can specify `video` or `channel`.
+
+**Examples:**
 
 ```yml
 ---
 title: My Awesome Post
 date: 2025-12-1
 ---
+
+{# YouTube from URL #}
 {% embed https://www.youtube.com/watch?v=dQw4w9WgXcQ %}
-{% embed https://open.spotify.com/track/3cLqK3LPVrTIzfENVmYLoU %}
-{% embed https://vimeo.com/59859181 %}
-```
 
-If you are using an ID instead of a URL, you must provide a hint for the platform as the second argument.
-
-```yml
+{# YouTube from ID #}
 {% embed dQw4w9WgXcQ youtube %}
-{% embed 59859181 vimeo %}
+
+{# Spotify track from URL #}
+{% embed https://open.spotify.com/track/3cLqK3LPVrTIzfENVmYLoU %}
+
+{# Spotify playlist from ID #}
 {% embed 1LcfcxzGNcselP4PIGeQ6V spotify playlist %}
+
+{# Vimeo from URL #}
+{% embed https://vimeo.com/59859181 %}
+
+{# Twitch channel from URL #}
+{% embed https://www.twitch.tv/theburntpeanut %}
+
+{# Twitch video from ID #}
+{% embed 123456789 twitch video %}
+
+{# TikTok from URL #}
+{% embed https://www.tiktok.com/@scout2015/video/6718335390845095173 %}
 ```
 
-You may also use provider tags such as:
+**Platform-specific tags:**
+
+For convenience, legacy tags for each platform are also available.
+
 ```yml
 {% youtube dQw4w9WgXcQ %}
 {% spotify 1LcfcxzGNcselP4PIGeQ6V playlist %}
 {% vimeo 59859181 %}
+{% twitch theburntpeanut channel %}
+{% tiktok 6718335390845095173 %}
 ```
 
 ### _config.yml
