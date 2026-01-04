@@ -36,16 +36,27 @@ function getPalettes(ctx) {
         .filter(f => /^.*\.css$/.test(f)) // Only .css files
         .map(file => {
             const key = file
+                .replace(/\*(dark|light)\*/i, '')
                 .replace(/^palette-/, '')   // palette-default.css -> default.css
                 .replace(/\.css$/, ''),    // default.css -> default
                 name = key
                     .split(/[-_]/)
                     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-                    .join(' ');
+                    .join(' ')
+                    .replace(/and/gi, '&');
+
+            // Get mode, default to dark
+            let mode = 'dark';
+            if (file.includes('light'))
+                mode = 'light';
+            else if (file.includes('dark'))
+                mode = 'dark';
+
             return {
                 file, // "blood-red.css"
                 key,  // "blood-red"
-                name  // "Blood Red"
+                name, // "Blood Red"
+                mode, // "dark" or "light"
             };
         });
 }

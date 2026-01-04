@@ -1,0 +1,33 @@
+:root {
+    /* Backgrounds (Light Mode - Violet Tint) */
+    --bg: #ffffff;
+    --bg-black: #f8f7fc;
+    --bg-alt: #f3f0ff;
+    --bg-card: #ffffff;
+    --bg-radial-start: #ffffff;
+    --bg-header-end: #e9d8fd;
+    --bg-tooltip: rgba(255, 255, 255, 0.98);
+
+    /* Text (Inverted) */
+    --text: #2d3748;
+    --text-white: #1a202c;
+    --text-light: #4a5568;
+    --text-sidebar: #553c9a;
+    --muted: #805ad5;
+
+    /* Primary accent family - (Medium Purple) */
+    --accent: #805ad5;
+    --accent-soft: rgba(128, 90, 213, 0.15);
+    --accent-muted: #6b46c1;
+    --accent-bright: #9f7aea;
+    --focus-ring: rgba(159, 122, 234, 0.4);
+
+    /* Borders & Shadows */
+    --border: #e9d8fd;
+    --border-card: #e9d8fd;
+    --border-sidebar: #f3f0ff;
+    --border-code: #d6bcfa;
+    --shadow-soft: 0 10px 30px rgba(107, 70, 193, 0.08);
+    --shadow-header: 0 4px 12px rgba(107, 70, 193, 0.05);
+    --shadow-tooltip: 0 12px 30px rgba(107, 70, 193, 0.15);
+}

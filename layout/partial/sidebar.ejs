@@ -61,7 +61,7 @@ var sidebarCfg = theme.sidebar || {},
     <select id="palette-select">
       <% palettes.forEach(function (p) { %>
       <option value="<%= p.key %>" <%= (defaultKey === p.key) ? 'selected' : '' %>>
-        <%= p.name || p.key || p.file %>
+        <%= p.name || p.key || p.file %> <%= p.mode === 'light' ? '(Light)' : '' %>
       </option>
       <% }); %>
     </select>
