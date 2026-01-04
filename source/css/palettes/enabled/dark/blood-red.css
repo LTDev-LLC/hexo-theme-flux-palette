@@ -1,5 +1,5 @@
 :root {
-    /* Backgrounds */
+    /* Backgrounds (Darker Dark Mode) */
     --bg: #050505;
     --bg-black: #000000;
     --bg-alt: #0b0303;
@@ -11,7 +11,7 @@
     /* Text */
     --text: #f5f2f2;
     --text-white: #ffffff;
-    --text-light: #dddddd; /* Excerpts */
+    --text-light: #dddddd;
     --text-sidebar: #f0f0f0;
     --muted: #c2a2a2;
 

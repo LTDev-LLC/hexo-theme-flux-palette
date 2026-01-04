@@ -8,7 +8,7 @@ let projectsCache = null;
 
 // Load all projects from the _projects folder
 async function loadProjects(ctx) {
-    if (projectsCache)
+    if (hexo.env?.env !== 'development' && Array.isArray(projectsCache))
         return projectsCache;
 
     const base = path.join(ctx.base_dir, 'source', '_projects');
