@@ -25,9 +25,8 @@
       fallback = '<%= defaultKey %>';
     key = fallback;
     try {
-      var stored = localStorage.getItem(STORAGE_KEY);
-      if (stored)
-        key = stored;
+      let hashget = new URLSearchParams(window.location.hash.substring(1) ?? '');
+      key = hashget.get('theme') || localStorage.getItem(STORAGE_KEY) || fallback
     } catch (e) {}
     document.documentElement.setAttribute('data-palette', String(key).replace(/[^a-zA-Z0-9_-]/g, ''));
   })();

@@ -92,6 +92,12 @@ var sidebarCfg = theme.sidebar || {},
       } catch (e) {
         // ignore
       }
+      let curHash = {}
+      try {
+        curHash = new URLSearchParams(window.location.hash.substring(1) ?? '');
+      } catch (e) {}
+      curHash.set('theme', key);
+      window.location.hash = curHash.toString();
     }
 
     // On change, just flip the attribute + persist

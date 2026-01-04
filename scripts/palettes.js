@@ -95,7 +95,7 @@ hexo.extend.generator.register('theme_palettes_bundle', function () {
             return;
         }
 
-        // Replace :root with the palette selector
+        // Read the palette content
         let content;
         try {
             content = fs.readFileSync(fullPath, 'utf8');
