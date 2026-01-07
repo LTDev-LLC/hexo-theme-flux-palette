@@ -60,7 +60,7 @@ var sidebarCfg = theme.sidebar || {},
   <div class="palette-switcher" x-data="paletteSwitcher(<%= JSON.stringify(palettes) %>, '<%= defaultKey %>')">
     <select id="palette-select" x-model="currentPalette">
       <template x-for="p in palettes" :key="p.key">
-        <option :value="p.key" x-text="p.name || p.key || p.file + (p.mode === 'light' ? ' (Light)' : '')"></option>
+        <option :value="p.key" x-text="(p.name || p.key || p.file) + (p.mode === 'light' ? ' (Light)' : '')" :selected="currentPalette === p.key"></option>
       </template>
     </select>
   </div>
