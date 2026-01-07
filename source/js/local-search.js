@@ -34,7 +34,11 @@ document.addEventListener('alpine:init', () => {
                 this.fetchIndex();
                 return;
             }
-            this.results = this.docs.filter(d => ((d.title + ' ' + (d.content || '') + ' ' + (d.excerpt || '')).toLowerCase()).includes(q.toLowerCase)).slice(0, 15);
+            const query = q.toLowerCase();
+            this.results = this.docs.filter(d => {
+                const haystack = (d.title + ' ' + (d.content || '') + ' ' + (d.excerpt || '')).toLowerCase();
+                return haystack.includes(query);
+            }).slice(0, 15);
         },
         clearSearch() {
             this.query = '';
