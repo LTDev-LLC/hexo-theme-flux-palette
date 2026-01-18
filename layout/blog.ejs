@@ -1,4 +1,7 @@
 <section class="post-index">
+  <% if (theme.blog && theme.blog.title) { %>
+  <h1 class="page-title"><%= theme.blog.title %></h1>
+  <% } %>
   <% page.posts.each(function(post) { %>
   <article class="post-card">
     <h2 class="post-title">
@@ -7,10 +10,12 @@
       <%- partial('partial/lock') %>
       <% } %>
     </h2>
+
     <div class="post-meta">
       <time datetime="<%= date_xml(post.date) %>">
         <%= date(post.date, config.date_format || 'YYYY-MM-DD') %>
       </time>
+
       <% if (post.categories && post.categories.length) { %>
       <span class="meta-sep">-</span>
       <span>
@@ -19,6 +24,7 @@
         <% }); %>
       </span>
       <% } %>
+
       <% if (post.read_time_text || post.read_time) { %>
       <span class="meta-sep">-</span>
       <span class="post-readtime">
@@ -26,6 +32,7 @@
       </span>
       <% } %>
     </div>
+
     <div class="post-excerpt">
       <% if (post.excerpt) { %>
       <%- strip_html(post.excerpt).substring(0, 220) %>
@@ -33,6 +40,16 @@
       <%- strip_html(post.content).substring(0, 220) %>
       <% } %>
     </div>
+
+    <% if (post.tags && post.tags.length) { %>
+    <div class="post-tags">
+      Tags:
+      <% post.tags.forEach(function(tag, i) { %>
+      <a href="<%= url_for(tag.path) %>"><%= tag.name %></a><%= i < post.tags.length - 1 ? ', ' : '' %>
+      <% }) %>
+    </div>
+    <% } %>
+
     <div class="post-meta-bottom">
       <a class="read-more" href="<%= url_for(post.path) %>">Read more →</a>
       <% if (post.short_hash) { %>

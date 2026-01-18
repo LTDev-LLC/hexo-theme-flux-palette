@@ -1,4 +1,7 @@
 <section class="projects-page post-index">
+  <% if (theme.projects && theme.projects.title) { %>
+  <h1 class="page-title"><%= theme.projects.title %></h1>
+  <% } %>
   <% if (page.projects && page.projects.length) { %>
   <% page.projects.forEach(function(project) { %>
   <article class="post-card project-card">
@@ -8,25 +11,19 @@
       <% } %>
       <a href="<%= url_for(project.path) %>"><%= project.title %></a>
     </h2>
+
     <div class="post-meta">
       <time datetime="<%= date_xml(project.date) %>">
         <%= date(project.date, config.date_format || 'YYYY-MM-DD') %>
       </time>
-      <% if (project.project_tags && project.project_tags.length) { %>
-      <span class="meta-sep">-</span>
-      <span>
-        <% project.project_tags.forEach(function(tag, i) { %>
-        <%= tag %><%= i < project.project_tags.length - 1 ? ', ' : '' %>
-        <% }); %>
-      </span>
-      <% } %>
       <% if (project.read_time_text || project.read_time) { %>
       <span class="meta-sep">-</span>
       <span class="post-readtime">
-        <%= project.read_time_text || (project.read_time && project.read_time.text) %>
+        <%= read_time(project, true) %>
       </span>
       <% } %>
     </div>
+
     <div class="post-excerpt">
       <% if (project.project_summary) { %>
       <%= project.project_summary %>
@@ -38,6 +35,16 @@
       No description provided yet.
       <% } %>
     </div>
+
+    <% if (project.project_tags && project.project_tags.length) { %>
+    <div class="post-tags">
+      Tags:
+      <% project.project_tags.forEach(function(tag, i) { %>
+      <a href="<%= project_tag_url(tag) %>"><%= tag %></a><%= i < project.project_tags.length - 1 ? ', ' : '' %>
+      <% }); %>
+    </div>
+    <% } %>
+
     <div class="post-meta-bottom">
       <nav>
         <a href="<%= url_for(project.path) %>" class="read-more">
@@ -63,7 +70,8 @@
   <nav class="pagination">
     <% if (page.prev) { %>
     <a class="prev" href="<%= url_for(page.prev_link) %>">
-      &laquo; Newer
+      &laquo;
+      Newer
     </a>
     <% } %>
     <span class="meta-sep">&nbsp;</span>
@@ -76,7 +84,8 @@
   <% } %>
   <% } else { %>
   <p>
-    No projects have been defined yet. Add files under
+    No projects have been defined yet.
+    Add files under
     <code>source/_projects</code>.
   </p>
   <% } %>

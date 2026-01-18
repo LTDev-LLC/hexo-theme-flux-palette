@@ -2,6 +2,10 @@
 
 <% if (homeMode === 'projects') { %>
 <section class="projects-page post-index">
+  <% if (theme.projects && theme.projects.title) { %>
+  <h1 class="page-title"><%= theme.projects.title %></h1>
+  <% } %>
+
   <%
     // Use the same per-page value as Hexo's index generator
     var perPage = (config.index_generator && config.index_generator.per_page) || config.per_page || 10;
@@ -48,20 +52,10 @@
       <time datetime="<%= date_xml(project.date) %>">
         <%= date(project.date, config.date_format || 'YYYY-MM-DD') %>
       </time>
-
-      <% if (project.project_tags && project.project_tags.length) { %>
-      <span class="meta-sep">-</span>
-      <span>
-        <% project.project_tags.forEach(function(tag, i) { %>
-        <%= tag %><%= i < project.project_tags.length - 1 ? ', ' : '' %>
-        <% }); %>
-      </span>
-      <% } %>
-
       <% if (project.read_time_text || project.read_time) { %>
       <span class="meta-sep">-</span>
       <span class="post-readtime">
-        <%= project.read_time_text || (project.read_time && project.read_time.text) %>
+        <%= read_time(project, true) %>
       </span>
       <% } %>
     </div>
@@ -75,6 +69,15 @@
       <%- strip_html(project.content).substring(0, 220) %>
       <% } %>
     </div>
+
+    <% if (project.project_tags && project.project_tags.length) { %>
+    <div class="post-tags">
+      Tags:
+      <% project.project_tags.forEach(function(tag, i) { %>
+      <a href="<%= project_tag_url(tag) %>"><%= tag %></a><%= i < project.project_tags.length - 1 ? ', ' : '' %>
+      <% }); %>
+    </div>
+    <% } %>
 
     <div class="post-meta-bottom">
       <nav>

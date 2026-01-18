@@ -8,6 +8,24 @@ function stripHtml(str) {
     return String(str || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// Basic Markdown stripper for search index content
+function stripMarkdown(str) {
+    if (!str) return '';
+    return str
+        .replace(/<[^>]*>/g, ' ') // HTML tags
+        .replace(/!\[.*?\]\(.*?\)/g, '') // Images
+        .replace(/\[([^\]]+)\]\(.*?\)/g, '$1') // Links
+        .replace(/`{3}[\s\S]*?`{3}/g, '') // Code blocks
+        .replace(/`(.+?)`/g, '$1') // Inline code
+        .replace(/#+\s+/g, '') // Headings
+        .replace(/(\*\*|__)(.*?)\1/g, '$2') // Bold
+        .replace(/(\*|_)(.*?)\1/g, '$2') // Italic
+        .replace(/>\s+/g, '') // Blockquotes
+        .replace(/- \s+/g, '') // Lists
+        .replace(/\s+/g, ' ') // Collapse whitespace
+        .trim();
+}
+
 // Load projects from source/_projects/*.md
 function loadProjectsForSearch(ctx) {
     const base = path.join(ctx.base_dir, 'source', '_projects');
@@ -52,7 +70,8 @@ function loadProjectsForSearch(ctx) {
             stat = fs.statSync(full),
             date = parsed.date ? new Date(parsed.date) : stat.mtime,
             projectPath = `projects/${slug}/`,
-            excerpt = stripHtml(parsed.excerpt || body);
+            text = stripMarkdown(parsed.excerpt || body),
+            excerpt = text.length > 220 ? text.slice(0, 217) + '…' : text;
 
         // Add the project
         projects.push({
@@ -65,7 +84,7 @@ function loadProjectsForSearch(ctx) {
             tags: parsed.project_tags || parsed.tags || [],
             categories: [],
             excerpt,
-            content: body
+            content: text // Use stripped text for content search as well
         });
     });
 

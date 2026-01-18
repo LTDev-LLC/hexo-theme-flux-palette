@@ -1,7 +1,9 @@
 :root {
     /* Layout & Sizes */
-    --width-max: 1200px;
+    --width-max: 1600px;
     --width-ultrawide: 1800px;
+    --sidebar-width: 320px;
+    --sidebar-width-wide: 400px;
     --radius-lg: 12px;
     --radius-xl: 18px;
     --sidebar-offset: 80px;
@@ -16,6 +18,14 @@
     --transition-slowest: 0.5s ease-out;
 }
 
+/* Ultrawide Overrides */
+@media (min-width: 2500px) {
+    :root {
+        --width-max: var(--width-ultrawide);
+        --sidebar-width: var(--sidebar-width-wide);
+    }
+}
+
 *,
 *::before,
 *::after {
@@ -24,6 +34,9 @@
 
 html {
     -webkit-text-size-adjust: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+    scrollbar-gutter: stable;
 }
 
 html,
@@ -48,10 +61,10 @@ body.site {
     color: var(--text);
     font-family: var(--font-sans);
     line-height: 1.6;
+    /* Updated Word Wrap Settings */
     overflow-wrap: break-word;
     word-wrap: break-word;
-    -ms-word-break: break-all;
-    word-break: break-word;
+    word-break: normal;
 }
 
 img,
@@ -79,6 +92,7 @@ svg {
 }
 
 .header-inner {
+    width: 100%;
     max-width: var(--width-max);
     margin: 0 auto;
     padding: 0.75rem 1rem;
@@ -200,11 +214,12 @@ svg {
 
 /* Body layout */
 .site-body {
+    width: 100%;
     max-width: var(--width-max);
     margin: 2rem auto 3rem;
     padding: 0 1.5rem;
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+    grid-template-columns: 1fr var(--sidebar-width);
     gap: 2rem;
     transition: max-width var(--transition-slower);
 }
@@ -300,6 +315,10 @@ h2.post-title {
     margin: 0 0.5rem;
 }
 
+.post-tags {
+    margin-bottom: 0.8rem;
+}
+
 .post-tags a {
     color: var(--accent);
     text-decoration: none;
@@ -326,7 +345,8 @@ h2.post-title {
 .post-content a,
 .page-content a {
     color: var(--accent);
-    word-break: break-all;
+    word-break: normal;
+    overflow-wrap: break-word;
 }
 
 .post-content a:hover,
@@ -441,6 +461,7 @@ h2.post-title {
 }
 
 .footer-inner {
+    width: 100%;
     max-width: var(--width-max);
     margin: 0 auto;
     padding: 1rem 1.5rem 1.8rem;
@@ -706,6 +727,7 @@ figure {
     margin-right: 0;
     overflow: auto;
 }
+
 /* Social buttons */
 .social-buttons {
     display: flex;
@@ -992,23 +1014,25 @@ figure {
 }
 
 @media (min-width: 2500px) {
-    :root {
-        --width-max: var(--width-ultrawide);
-    }
-
     .site-body {
-        grid-template-columns: minmax(0, 4fr) minmax(350px, 1fr);
         gap: 4rem;
         margin-top: 4rem;
     }
 
-    .post-card, .post-single, .page-single {
+    .post-card,
+    .post-single,
+    .page-single,
+    .archive-year {
         padding: 2.5rem 3rem;
         margin-bottom: 2rem;
     }
 
-    h1 { font-size: 2.8rem; }
-    h2 { font-size: 2.2rem; }
+    h1 {
+        font-size: 2.8rem;
+    }
+    h2 {
+        font-size: 2.2rem;
+    }
 
     .sidebar-section {
         padding: 2rem;
@@ -1018,4 +1042,27 @@ figure {
         max-width: 240px;
         max-height: 240px;
     }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    opacity: 0.5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+    opacity: 1;
 }

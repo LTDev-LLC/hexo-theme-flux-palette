@@ -192,6 +192,12 @@ menu: # site menu
 home: # home page configuration
   mode: blog # "blog" or "projects"
 
+blog: # blog page configuration
+  title: "Blog" # custom title
+
+projects: # projects page configuration
+  title: "Projects" # custom title
+
 search: # search
   enabled: true # set to false to turn off search
   title: "Search" # page title

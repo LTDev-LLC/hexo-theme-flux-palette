@@ -5,9 +5,12 @@
   <div class="post-meta">
     <time datetime="<%= date_xml(page.date) %>">
       <%= date(page.date, config.date_format || 'YYYY-MM-DD') %>
+      <% if (page.read_time) { %>
       <span class="meta-sep">-</span>
       <%= read_time(page, true) %>
+      <% } %>
     </time>
+
     <% if (page.categories && page.categories.length) { %>
     <span class="meta-sep">-</span>
     <% page.categories.forEach(function(cat, i) { %>
