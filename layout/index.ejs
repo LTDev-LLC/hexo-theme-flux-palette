@@ -8,34 +8,23 @@
 
   <%
     // Use the same per-page value as Hexo's index generator
-    var perPage = (config.index_generator && config.index_generator.per_page) || config.per_page || 10;
-
-    var current = page.current || 1;
+    var perPage = (config.index_generator && config.index_generator.per_page) || config.per_page || 10,
+        current = page.current || 1;
 
     // Get ALL projects (from _projects + project:true posts) via helper
     // Assumes recent_projects(limit) will return "limit" items; pass a big number to effectively get all.
-    var allProjects = (typeof recent_projects === 'function')
-      ? recent_projects(9999)
-      : [];
-
-    var totalProjects = allProjects.length;
-    var totalPages = perPage > 0 ? Math.ceil(totalProjects / perPage) : 1;
-
-    var start = perPage > 0 ? perPage * (current - 1) : 0;
-    var end   = perPage > 0 ? start + perPage : totalProjects;
-    var projects = allProjects.slice(start, end);
+    var allProjects = (typeof recent_projects === 'function') ? recent_projects(9999) : [],
+        totalProjects = allProjects.length;
+        totalPages = perPage > 0 ? Math.ceil(totalProjects / perPage) : 1,
+        start = perPage > 0 ? perPage * (current - 1) : 0,
+        end   = perPage > 0 ? start + perPage : totalProjects,
+        projects = allProjects.slice(start, end);
 
     // Pagination for projects mode
-    var projPrev = current > 1 ? current - 1 : 0;
-    var projNext = current < totalPages ? current + 1 : 0;
-
-    var projPrevLink = projPrev > 0
-      ? (projPrev === 1 ? '/' : '/page/' + projPrev + '/')
-      : '';
-
-    var projNextLink = projNext > 0
-      ? '/page/' + projNext + '/'
-      : '';
+    var projPrev = current > 1 ? current - 1 : 0,
+        projNext = current < totalPages ? current + 1 : 0,
+        projPrevLink = projPrev > 0 ? (projPrev === 1 ? '/' : '/page/' + projPrev + '/') : '',
+        projNextLink = projNext > 0 ? '/page/' + projNext + '/' : '';
   %>
 
   <% if (projects.length) { %>
@@ -146,6 +135,7 @@
         <% }); %>
       </span>
       <% } %>
+
       <% if (post.read_time_text || post.read_time) { %>
       <span class="meta-sep">-</span>
       <span class="post-readtime">
@@ -153,6 +143,7 @@
       </span>
       <% } %>
     </div>
+
     <div class="post-excerpt">
       <% if (post.excerpt) { %>
       <%- strip_html(post.excerpt).substring(0, 220) %>
@@ -160,8 +151,9 @@
       <%- strip_html(post.content).substring(0, 220) %>
       <% } %>
     </div>
+
     <div class="post-meta-bottom">
-      <a class="post-btn" href="<%= url_for(post.path) %>">Read more →</a>
+      <a class="post-btn" href="<%= url_for(post.path) %>">Read more</a>
       <% if (post.short_hash) { %>
       <a href="<%= url_for('/s/' + post.short_hash + '/') %>">
         #<%= post.short_hash %>

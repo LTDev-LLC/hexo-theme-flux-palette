@@ -139,6 +139,7 @@ hexo.extend.generator.register('theme_projects', async function (locals) {
             tagSlug = slugize(tag, { transform: 1 }),
             tagTotalPages = perPage > 0 ? Math.ceil(tagProjects.length / perPage) : 1;
 
+        // Paginated listing: /project-tag/<tag>/, /project-tag/<tag>/page/2/, ...
         for (let i = 1; i <= tagTotalPages; i++) {
             const current = i,
                 base = `project-tag/${tagSlug}`,
@@ -151,6 +152,7 @@ hexo.extend.generator.register('theme_projects', async function (locals) {
                 prev_link = prev > 0 ? (prev === 1 ? `${base}/` : `${base}/page/${prev}/`) : '',
                 next_link = next > 0 ? `${base}/page/${next}/` : '';
 
+            // Add route to collection
             routes.push({
                 path: path,
                 layout: 'projects',

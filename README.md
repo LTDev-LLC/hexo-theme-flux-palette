@@ -7,13 +7,21 @@ A responsive blog/journal [Hexo](https://hexo.io/) theme designed around the ide
 - [Features](#features)
 - [Install](#install)
 - [Configuration](#configuration)
-  * Default [_config.yml](#_config.yml)
+  * [Password protected posts](#password-protected-posts)
+  * [Read Time](#read-time)
+  * [Social listings](#social-listings)
+  * [Projects listings](#projects-listings)
+  * [Embeds](#embeds)
+  * [Comments](#comments)
+  * [Default _config.yml](#_configyml)
 
 ## Features
 
 - Mobile friendly/responsive
 - Multiple [color palettes](/source/css/palettes/)
-  * Has support for user selection via select dropdown or can be disabled within the config
+  * Support for user selection via dropdown or fixed via config
+- **SEO & Social Metadata** (Open Graph / Twitter Cards)
+- **Comments** (Giscus & Utterances support)
 - Password encrypted posts
 - Pre-compile JavaScript via [swc](https://swc.rs/)
   * Used to compile Alpine.js features. Can compile any other added JavaScript.
@@ -40,8 +48,7 @@ $ npm install @swc/core --save
 OR updating:
 
 ```bash
-$ cp themes/flux-palette/_config.yml theme-config.yml ; rm -rf themes/flux-palette
-$ git clone --depth=1 https://github.com/LTDev-LLC/hexo-theme-flux-palette.git themes/flux-palette ; rm -rf !$/.git
+$ cp themes/flux-palette/_config.yml theme-config.yml ; rm -rf themes/flux-palette$ git clone --depth=1 https://github.com/LTDev-LLC/hexo-theme-flux-palette.git themes/flux-palette ; rm -rf !$/.git
 $ mv theme-config.yml themes/flux-palette/_config.yml
 ```
 
@@ -70,7 +77,7 @@ password: password-goes-here
 ### Read Time
 
 The front matter if your posts will be updated with the estimated read time information.
-Can be disabled; see [_config.yml](#_config.yml) below.
+Can be disabled; see [_config.yml](https://www.google.com/search?q=%23_config.yml) below.
 
 ```yml
 ---
@@ -88,10 +95,10 @@ You can display social links/icons in the sidenav by adding a `social` config to
 ```yml
 social:
   - name: GitHub
-    url: https://github.com/LTDev-LLC/hexo-theme-flux-palette
+    url: [https://github.com/LTDev-LLC/hexo-theme-flux-palette](https://github.com/LTDev-LLC/hexo-theme-flux-palette)
     icon: mdi:github
   - name: Website
-    url: https://flux-palette.ltdev.llc/
+    url: [https://flux-palette.ltdev.llc/](https://flux-palette.ltdev.llc/)
     icon: material-symbols:link
 ```
 
@@ -107,9 +114,9 @@ title: Flux Palette
 date: 2025-12-1
 buttons:
   - name: GitHub
-    url: https://github.com/LTDev-LLC/hexo-theme-flux-palette
+    url: [https://github.com/LTDev-LLC/hexo-theme-flux-palette](https://github.com/LTDev-LLC/hexo-theme-flux-palette)
   - name: Demo
-    url: https://flux-palette.pages.dev/
+    url: [https://flux-palette.pages.dev/](https://flux-palette.pages.dev/)
 project_summary: "The Flux Palette source."
 project_tags:
   - javascript
@@ -132,9 +139,9 @@ The generic `embed` tag is the most flexible way to embed content.
 {% embed <url/id> [platform_hint] [type_hint] %}
 ```
 
--   `<url/id>`: The full URL or the ID of the content to embed.
--   `[platform_hint]`: (Optional) If you use an ID instead of a URL, you must provide a platform hint. Supported platforms: `youtube`, `spotify`, `vimeo`, `twitch`, `tiktok`.
--   `[type_hint]`: (Optional) For Spotify, you can specify `track`, `playlist`, or `artist`. For Twitch, you can specify `video` or `channel`.
+* `<url/id>`: The full URL or the ID of the content to embed.
+* `[platform_hint]`: (Optional) If you use an ID instead of a URL, you must provide a platform hint. Supported platforms: `youtube`, `spotify`, `vimeo`, `twitch`, `tiktok`.
+* `[type_hint]`: (Optional) For Spotify, you can specify `track`, `playlist`, or `artist`. For Twitch, you can specify `video` or `channel`.
 
 **Examples:**
 
@@ -167,18 +174,46 @@ date: 2025-12-1
 
 {# TikTok from URL #}
 {% embed https://www.tiktok.com/@scout2015/video/6718335390845095173 %}
+
 ```
 
-**Platform-specific tags:**
+### Comments
 
-For convenience, legacy tags for each platform are also available.
+Flux Palette supports privacy-focused comment systems: [Giscus](https://www.google.com/search?q=https://giscus.app/) and [Utterances](https://www.google.com/search?q=https://utteranc.es/).
+Enable them in `_config.yml`.
+
+**Giscus Example:**
 
 ```yml
-{% youtube dQw4w9WgXcQ %}
-{% spotify 1LcfcxzGNcselP4PIGeQ6V playlist %}
-{% vimeo 59859181 %}
-{% twitch theburntpeanut channel %}
-{% tiktok 6718335390845095173 %}
+comments:
+  enabled: true
+  service: giscus
+  giscus:
+    repo: "username/repo"
+    repo_id: "R_..."
+    category: "Announcements"
+    category_id: "DIC_..."
+    mapping: "pathname"
+    reactions_enabled: "1"
+    emit_metadata: "0"
+    input_position: "top"
+    theme: "preferred_color_scheme"
+    lang: "en"
+
+```
+
+**Utterances Example:**
+
+```yml
+comments:
+  enabled: true
+  service: utterances
+  utterances:
+    repo: "username/repo"
+    issue_term: "pathname"
+    label: "comments"
+    theme: "github-light"
+
 ```
 
 ### _config.yml
@@ -231,6 +266,26 @@ short_url: # short URL options
   enabled: true # set to false to turn off all short URLs
   length: 6 # characters in hash
 
+comments: # comment system settings
+  enabled: false
+  service: giscus # 'giscus' or 'utterances'
+  giscus:
+    repo: ""
+    repo_id: ""
+    category: ""
+    category_id: ""
+    mapping: "pathname"
+    reactions_enabled: "1"
+    emit_metadata: "0"
+    input_position: "top"
+    theme: "preferred_color_scheme"
+    lang: "en"
+  utterances:
+    repo: ""
+    issue_term: "pathname"
+    label: "comments"
+    theme: "github-light"
+
 swc:
   enabled: true # set to false to turn off SWC
   target: es2020 # target environment
@@ -249,4 +304,3 @@ attribution: # attribution options
   link: https://github.com/LTDev-LLC/hexo-theme-flux-palette
   text: Flux Palette by LTDev LLC
 ```
-

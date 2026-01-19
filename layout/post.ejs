@@ -44,6 +44,7 @@
     </a>
     <% } %>
   </div>
+  <%- partial('partial/comments') %>
 </article>
 <% if (page.encrypted) { %>
 <script src="<%= url_for('/js/encrypted-post.js') %>"></script>

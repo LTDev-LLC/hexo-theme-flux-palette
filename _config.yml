@@ -1,6 +1,6 @@
 menu: # site menu
   Home: /
-  Blog: /blog/
+  Projects: /projects/
   Archives: /archives/
   Search : /search/
   Feed: /rss.xml
@@ -14,8 +14,8 @@ blog: # blog page configuration
 projects: # projects page configuration
   title: "Projects" # custom title
 
-search: # local search
-  enabled: true # set to false to turn off local search
+search: # search
+  enabled: true # set to false to turn off search
   title: "Search" # page title
 
 sidebar:
@@ -28,11 +28,10 @@ sidebar:
     size: 2.5em # icon size
   palette_selector: # palette selector
     enabled: true # set to false to turn off palette selector
-    default: midnight-sun # default palette selection
+    default: abyssal-blue # default palette selection
     palette_folder: css/palettes # folder for palette css files
 
 rss: # RSS feed options
-  enabled: true # set to false to turn off RSS feed
   path: rss.xml # output file (relative to root)
   limit: 20 # number of posts
   include_drafts: false
@@ -43,6 +42,26 @@ rss: # RSS feed options
 short_url: # short URL options
   enabled: true # set to false to turn off all short URLs
   length: 6 # characters in hash
+
+comments: # comment system settings
+  enabled: false
+  service: giscus # 'giscus' or 'utterances'
+  giscus:
+    repo: ""
+    repo_id: ""
+    category: ""
+    category_id: ""
+    mapping: "pathname"
+    reactions_enabled: "1"
+    emit_metadata: "0"
+    input_position: "top"
+    theme: "preferred_color_scheme"
+    lang: "en"
+  utterances:
+    repo: ""
+    issue_term: "pathname"
+    label: "comments"
+    theme: "github-light"
 
 swc:
   enabled: true # set to false to turn off SWC
