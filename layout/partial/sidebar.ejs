@@ -6,7 +6,7 @@
     <span x-text="open ? '-' : '+'"></span>
   </h3>
   <div id="sb-about" x-show="open" x-collapse>
-    <p><%= config.description || 'An undescript website.' %></p>
+    <%= config.description || 'An undescript website.' %>
   </div>
   <script>
     (function() {
