@@ -66,7 +66,7 @@ function buildButtons(ctx, options = {}) {
     return items.filter(i => i && i.url).map(i => {
         const name = i.name || i.label || '',
             title = i.title || name,
-            icon = i.icon || i.iconify || '', // e.g. "mdi:github"
+            rawIcon = i.icon || i.iconify || '',
             rel = i.rel || cfg.rel || 'me noopener noreferrer',
             target = i.target || cfg.target || '_blank';
 
@@ -75,19 +75,32 @@ function buildButtons(ctx, options = {}) {
             ? ctx.url_for(i.url)
             : i.url;
 
+        // wrapper style to enforce dimensions immediately
+        const wrapStyle = `width: ${escapeHTML(String(size))}; height: ${escapeHTML(String(size))}; font-size: ${escapeHTML(String(size))}; vertical-align: middle;`;
+
+        // Determine Icon Source
+        let iconHtml = '';
+        if (rawIcon) {
+            let src = rawIcon;
+            // If it looks like "prefix:name" without slashes, treat as Iconify
+            if (!src.includes('/') && src.includes(':')) {
+                const parts = src.split(':');
+                if (parts.length >= 2)
+                    src = `https://api.iconify.design/${parts[0]}/${parts.slice(1).join(':')}.svg`;
+            }
+            // Use CSS Mask to allow coloring (currentColor)
+            iconHtml = `<span class="social-icon" style="--icon-url: url('${escapeHTML(src)}');"></span>`;
+        }
+
         // Build the link
-        return (icon || name) ? [
+        return (rawIcon || name) ? [
             `<a class="link" href="${escapeHTML(href)}"`,
             ` target="${escapeHTML(target)}" rel="${escapeHTML(rel)}"`,
             title ? ` title="${escapeHTML(title)}"` : '',
             name ? ` aria-label="${escapeHTML(name)}"` : '',
             '>',
-            icon
-                ? `<iconify-icon icon="${escapeHTML(icon)}" aria-hidden="true" style="font-size:${escapeHTML(String(size))};"></iconify-icon>`
-                : '',
-            (!icon && name)
-                ? `<span label">${escapeHTML(name)}</span>`
-                : '',
+            iconHtml ? `<div class="social-icon-wrap" style="${wrapStyle}">${iconHtml}</div>` : '',
+            (!rawIcon && name) ? `<span label">${escapeHTML(name)}</span>` : '',
             '</a>'
         ].join('') : '';
 

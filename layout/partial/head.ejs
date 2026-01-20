@@ -66,7 +66,5 @@
 </script>
 <link rel="stylesheet" href="<%= url_for('/css/palettes.css') %>">
 <link rel="stylesheet" href="<%= url_for('/css/base.css') %>">
-<% if (theme?.sidebar?.social_buttons?.enabled && theme.sidebar.social_buttons?.inject_iconify) { %>
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon/dist/iconify-icon.min.js"></script>
-<% } %>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"></script>

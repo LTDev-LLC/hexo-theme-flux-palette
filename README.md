@@ -258,8 +258,7 @@ sidebar:
     limit: 5 # how many recent projects to show
   social_buttons: # social buttons
     enabled: true # set to false to turn off social buttons
-    inject_iconify: true # set to false to turn off Iconify
-    size: 2.5em # icon size
+    size: 1.6em # icon size
   palette_selector: # palette selector
     enabled: true # set to false to turn off palette selector
     default_dark: midnight-sun # default dark palette
