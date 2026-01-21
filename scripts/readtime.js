@@ -11,7 +11,7 @@ function getOptions(themeConfig) {
         wpm: typeof cfg.wpm === 'number' && cfg.wpm > 0 ? cfg.wpm : 238,
         min: typeof cfg.min === 'number' && cfg.min > 0 ? cfg.min : 1,
         label: cfg.label || 'minutes',
-        write_front_matter: cfg.write_front_matter !== false
+        write_front_matter: cfg.write_front_matter === true
     };
 }
 

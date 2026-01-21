@@ -22,6 +22,10 @@
   <footer class="site-footer">
     <%- partial('partial/footer') %>
   </footer>
+
+  <% if (theme.backtotop && theme.backtotop.enabled) { %>
+    <%- partial('partial/back-to-top') %>
+  <% } %>
 </body>
 
 </html>

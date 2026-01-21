@@ -10,9 +10,20 @@ const ALGORITHM = 'aes-256-gcm',
 
 hexo.extend.filter.register('after_post_render', async function (data) {
     // Check for password
-    const password = data.password;
+    let password = data.password;
     if (!password)
         return data;
+
+    // Support environment variables (Format: password: "env:MY_SECRET")
+    if (typeof password === 'string' && password.startsWith('env:')) {
+        const envKey = password.substring(4);
+        if (process.env[envKey]) {
+            password = process.env[envKey];
+        } else {
+            hexo.log.warn(`[Encrypt] Environment variable '${envKey}' not found for post '${data.title}'. Encryption skipped.`);
+            return data;
+        }
+    }
 
     // Generate Salt, IV and Key asynchronously
     const salt = await randomBytesAsync(SALT_LEN),

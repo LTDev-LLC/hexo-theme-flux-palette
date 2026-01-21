@@ -235,9 +235,10 @@ Below is the default config for Flux Palette found within [_config.yml](/_config
 menu: # site menu
   Home: /
   Projects: /projects/
-  Archives: /archives/
-  Search : /search/
-  Feed: /rss.xml
+  Misc:
+    Archives: /archives/
+    Search: /search/
+    Feed: /rss.xml
 
 home: # home page configuration
   mode: blog # "blog" or "projects"
@@ -252,6 +253,9 @@ search: # search
   enabled: true # set to false to turn off search
   title: "Search" # page title
 
+backtotop: # back to top button
+  enabled: true # set to false to turn off back to top button
+
 sidebar:
   recent_projects:
     enabled: true # set false to hide the section
@@ -261,7 +265,7 @@ sidebar:
     size: 1.6em # icon size
   palette_selector: # palette selector
     enabled: true # set to false to turn off palette selector
-    default_dark: midnight-sun # default dark palette
+    default_dark: solar-amber # default dark palette
     default_light: paper-and-ink # default light palette
     palette_folder: css/palettes # folder for palette css files
 
@@ -277,14 +281,17 @@ short_url: # short URL options
   enabled: true # set to false to turn off all short URLs
   length: 6 # characters in hash
 
-comments: # comment system settings
-  enabled: false
-  service: giscus # 'giscus' or 'utterances'
+# Enable comments service (either 'giscus' or 'utterances')
+# See https://giscus.app/#repository for giscus settings
+# See https://utteranc.es/#install for utterances settings
+comments:
+  enabled: true
+  service: giscus # Options: 'giscus', 'utterances'
   giscus:
-    repo: ""
-    repo_id: ""
-    category: ""
-    category_id: ""
+    repo: "username/repository" # [Required]
+    repo_id: "R_..." # [Required]
+    category: "General" # [Required]
+    category_id: "DIC_..." # [Required]
     mapping: "pathname"
     reactions_enabled: "1"
     emit_metadata: "0"
@@ -292,7 +299,7 @@ comments: # comment system settings
     theme: "preferred_color_scheme"
     lang: "en"
   utterances:
-    repo: ""
+    repo: "username/repository" # [Required]
     issue_term: "pathname"
     label: "comments"
     theme: "github-light"
@@ -307,11 +314,11 @@ swc:
 
 read_time: # read time options
   enabled: true # set to false to turn off read time
-  write_front_matter: true # write read time to front matter
+  write_front_matter: false # write read time to front matter
 
 # Show theme credit. Feeds our ego. Please, we're starving.
 attribution: # attribution options
   enabled: true # set to false to turn off attribution
-  link: https://github.com/LTDev-LLC/hexo-theme-flux-palette
+  link: https://ltdev.llc/projects/flux-palette/
   text: Flux Palette by LTDev LLC
 ```
