@@ -10,18 +10,6 @@ const ALGORITHM = 'aes-256-gcm',
     SALT_LEN = 16,
     IV_LEN = 16;
 
-// Helper to fetch remote images using native fetch
-async function fetchUrl(url) {
-    const res = await fetch(url);
-    if (!res.ok)
-        throw new Error(`Status Code: ${res.status}`);
-    const arrayBuffer = await res.arrayBuffer();
-    return {
-        buffer: Buffer.from(arrayBuffer),
-        mime: res.headers.get('content-type')
-    };
-}
-
 // Encrypt posts asynchronously using pbkdf2 after post is rendered
 hexo.extend.filter.register('after_post_render', async function (data) {
     // Check for password
@@ -193,4 +181,31 @@ function randomBytesAsync(size) {
 }
 function pbkdf2Async(password, salt, iterations, keylen, digest) {
     return new Promise((res, rej) => crypto.pbkdf2(password, salt, iterations, keylen, digest, (err, derivedKey) => (err || !derivedKey) ? rej(err) : res(derivedKey)));
+}
+async function fetchUrl(url, retries = 3) {
+    try {
+        const res = await fetch(url, { redirect: 'follow' });
+
+        if (!res.ok) {
+            // Don't retry client errors (4xx), but throw to handle failure
+            if (res.status < 500) {
+                const err = new Error(`Status Code: ${res.status}`);
+                err.noRetry = true;
+                throw err;
+            }
+            // Throw for 5xx errors to trigger catch block and retry
+            throw new Error(`Status Code: ${res.status}`);
+        }
+
+        // Return image buffer and mime type
+        return {
+            buffer: Buffer.from(await res.arrayBuffer()),
+            mime: res.headers.get('content-type')
+        };
+    } catch (err) {
+        // Retry on network errors or 5xx status codes
+        if (retries > 0 && !err.noRetry)
+            return fetchUrl(url, retries - 1);
+        throw err;
+    }
 }
