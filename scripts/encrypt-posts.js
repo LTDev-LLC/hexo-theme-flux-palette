@@ -28,6 +28,13 @@ hexo.extend.filter.register('after_post_render', async function (data) {
         }
     }
 
+    // Generate the salt and key to encrypt the content and images
+    const salt = await randomBytesAsync(SALT_LEN),
+        key = await pbkdf2Async(password, salt, ITERATIONS, KEY_LEN, DIGEST);
+
+    // Dictionary to store encrypted images
+    const encryptedImages = {};
+
     // Embed Images (Local & Remote) as Base64
     if (data.content) {
         // Regex to match img tags and capture the src attribute
@@ -36,7 +43,7 @@ hexo.extend.filter.register('after_post_render', async function (data) {
 
         if (matches.length > 0) {
             // Process all images asynchronously
-            const replacements = await Promise.all(matches.map(async (match) => {
+            const replacements = await Promise.all(matches.map(async (match, index) => {
                 const [fullTag, p1, src, p3] = match;
 
                 // Skip already embedded data URIs
@@ -101,18 +108,39 @@ hexo.extend.filter.register('after_post_render', async function (data) {
                     }
                 }
 
-                // If we successfully got a buffer, create the new tag
-                if (buffer) {
-                    const b64 = buffer.toString('base64'),
-                        newTag = `<img${p1}src="data:${mime};base64,${b64}"${p3}>`;
+                // If we didn't get a buffer, return null
+                if (!buffer)
+                    return null;
 
-                    return {
-                        index: match.index,
-                        length: fullTag.length,
-                        newTag
-                    };
-                }
-                return null;
+                // Generate encryption settings for each image independently
+                const imgIv = await randomBytesAsync(IV_LEN),
+                    cipher = crypto.createCipheriv(ALGORITHM, key, imgIv);
+
+                // Encrypt the image buffer
+                let encryptedBuffer = cipher.update(buffer);
+                encryptedBuffer = Buffer.concat([encryptedBuffer, cipher.final()]);
+
+                // Generate an ID for the image
+                const imgId = `enc-${index}-${Date.now()}`;
+
+                // Store in dictionary
+                encryptedImages[imgId] = {
+                    ct: encryptedBuffer.toString('base64'),
+                    iv: imgIv.toString('base64'),
+                    at: (cipher.getAuthTag()).toString('base64'),
+                    m: mime
+                };
+
+                // Uses a transparent 1x1 GIF as src to prevent broken image icon
+                const placeholderSrc = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+                    newTag = `<img${p1}src="${placeholderSrc}" data-enc-id="${imgId}"${p3}>`;
+
+                // Return the replacement
+                return {
+                    index: match.index,
+                    length: fullTag.length,
+                    newTag
+                };
             }));
 
             // Apply replacements in reverse order to preserve string indices
@@ -125,17 +153,14 @@ hexo.extend.filter.register('after_post_render', async function (data) {
         }
     }
 
-    // Generate Salt, IV and Key asynchronously
-    const salt = await randomBytesAsync(SALT_LEN),
-        iv = await randomBytesAsync(IV_LEN),
-        key = await pbkdf2Async(password, salt, ITERATIONS, KEY_LEN, DIGEST);
-
-    // Encrypt Content
-    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+    // Generate encryption settings for post content
+    const iv = await randomBytesAsync(IV_LEN),
+        cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
     // Construct Payload
     const encodedPayload = Buffer.from(JSON.stringify({
         ct: (cipher.update(data.content, 'utf8', 'base64') + cipher.final('base64')),
+        imgs: encryptedImages,
         s: salt.toString('base64'),
         iv: iv.toString('base64'),
         at: cipher.getAuthTag().toString('base64'),
@@ -161,7 +186,7 @@ hexo.extend.filter.register('after_post_render', async function (data) {
         <button type="button" class="encrypted-button" @click="handleUnlock" :disabled="isDecrypting">Unlock</button>
         <p class="encrypted-error" x-show="error" x-text="error" style="display:none;"></p>
       </div>
-      <div class="encrypted-post-content" x-show="decryptedContent" x-html="decryptedContent"></div>
+      <div class="encrypted-post-content" x-show="decryptedContent" x-html="decryptedContent" x-ref="contentContainer"></div>
     </div>`;
 
     // Data Hygiene

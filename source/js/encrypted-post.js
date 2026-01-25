@@ -7,6 +7,8 @@ document.addEventListener('alpine:init', () => {
         isDecrypting: false,
         payloadEncoded,
         errorTimer: null,
+        derivedKey: null,
+        imagesData: {},
         base64ToUint8Array(b64) {
             const binary = atob(b64),
                 len = binary.length,
@@ -44,46 +46,119 @@ document.addEventListener('alpine:init', () => {
                 ['decrypt']
             );
         },
-        async decryptPayload(password, payload) {
-            const ciphertext = this.base64ToUint8Array(payload.ct),
-                authTag = this.base64ToUint8Array(payload.at),
-                combinedData = new Uint8Array(ciphertext.length + authTag.length);
+        async decryptChunk(key, ctStr, ivStr, atStr) {
+            const ciphertext = this.base64ToUint8Array(ctStr),
+                authTag = this.base64ToUint8Array(atStr),
+                iv = this.base64ToUint8Array(ivStr);
+
+            // Web Crypto expects tag appended to ciphertext
+            const combinedData = new Uint8Array(ciphertext.length + authTag.length);
             combinedData.set(ciphertext);
             combinedData.set(authTag, ciphertext.length);
-            return new TextDecoder().decode(await crypto.subtle.decrypt({
-                name: 'AES-GCM',
-                iv: this.base64ToUint8Array(payload.iv),
-                tagLength: 128
-            },
-                (await this.deriveKey(password, this.base64ToUint8Array(payload.s), payload.i)),
+
+            // Decrypt chunk
+            return crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: iv, tagLength: 128 },
+                key,
                 combinedData
-            ));
+            );
         },
         async handleUnlock() {
-            if (!this.password) {
+            if (!this.password)
                 return await this.setError('Please enter a password.');
-                return;
-            }
-            if (!this.payloadEncoded) {
+            if (!this.payloadEncoded)
                 return await this.setError('No encrypted data found.');
-            }
+
             let payload;
             try {
                 payload = JSON.parse(atob(this.payloadEncoded));
             } catch (e) {
                 return await this.setError('Failed to parse encrypted data.');
-                return;
             }
+
             this.isDecrypting = true;
             this.error = '';
+
             try {
-                this.decryptedContent = await this.decryptPayload(this.password, payload);
+                // Derive and cache Key
+                this.derivedKey = await this.deriveKey(
+                    this.password,
+                    this.base64ToUint8Array(payload.s),
+                    payload.i
+                );
+
+                // Decrypt main post content
+                const decryptedBuffer = await this.decryptChunk(
+                    this.derivedKey,
+                    payload.ct, // content ciphertext
+                    payload.iv, // content iv
+                    payload.at // content auth tag
+                );
+
+                // Reveal content
+                this.decryptedContent = new TextDecoder().decode(decryptedBuffer);
+                this.imagesData = payload.imgs || {};
+
+                // Setup Lazy Loading after DOM update
+                this.$nextTick(() => {
+                    this.initLazyLoader();
+                });
             } catch (e) {
+                console.error(e);
                 this.decryptedContent = '';
                 return await this.setError('Incorrect password or decryption failed.');
             } finally {
                 this.isDecrypting = false;
-                this.password = '';
+                this.password = ''; // Clear password from memory
+            }
+        },
+        initLazyLoader() {
+            // Find container using x-ref
+            const container = this.$refs.contentContainer;
+            if (!container)
+                return;
+
+            // Find all placeholder images
+            const images = container.querySelectorAll('img[data-enc-id]');
+            if (images.length === 0)
+                return;
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target,
+                            id = img.dataset.encId;
+
+                        // Decrypt if we have data for this ID
+                        if (id && this.imagesData[id]) {
+                            this.revealImage(id, img);
+                            observer.unobserve(img); // Only decrypt once
+                        }
+                    }
+                });
+            }, { rootMargin: '200px' }); // Preload 200px before appearing
+
+            images.forEach(img => observer.observe(img));
+        },
+        async revealImage(id, imgEl) {
+            try {
+                const imgData = this.imagesData[id];
+
+                // Decrypt image + set source
+                imgEl.src = URL.createObjectURL(new Blob([
+                    await this.decryptChunk(
+                        this.derivedKey,
+                        imgData.ct,
+                        imgData.iv,
+                        imgData.at
+                    )
+                ], { type: imgData.m }));
+
+                // Remove from cache
+                delete this.imagesData[id];
+            } catch (e) {
+                console.error(`Failed to decrypt image ${id}`, e);
+                imgEl.alt = 'Decryption Failed';
             }
         }
     }));
