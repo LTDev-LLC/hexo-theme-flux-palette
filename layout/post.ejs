@@ -64,7 +64,7 @@
   </div>
 
   <% if (theme.comments && theme.comments.enabled) { %>
-  <% if (('comments' in page && page.comments !== false) && !page.encrypted) { %>
+  <% if ((!('comments' in page) || ('comments' in page && page.comments !== false)) && !page.encrypted) { %>
   <%- partial('partial/comments') %>
   <% } else { %>
   <hr />
