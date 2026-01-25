@@ -61,7 +61,7 @@
     <% } %>
   </div>
   <% if (theme.comments && theme.comments.enabled) {
-     if (('comments' in page.project && page.project.comments !== false)) { %>
+     if (!('comments' in page.project) || ('comments' in page.project && page.project.comments !== false)) { %>
   <%- partial('partial/comments') %>
   <% } else { %>
   <hr />
