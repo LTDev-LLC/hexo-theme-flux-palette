@@ -37,8 +37,8 @@
         </div>
         <div class="palette-row">
           <label for="cp-bg-input" class="palette-label">Background</label>
-          <div class="color-swatch-container" :style="'cursor: ' + (useCustomBg ? 'pointer' : 'default') + '; opacity: ' + (useCustomBg ? 1 : 0.3)">
-            <input id="cp-bg-input" type="color" x-model="customBgColor" @input="handleBgInput" class="color-input" :disabled="!useCustomBg">
+          <div class="color-swatch-container">
+            <input id="cp-bg-input" type="color" :value="customBgColor" @input="handleBgInput" class="color-input">
             <div class="color-swatch" :style="'background-color: ' + customBgColor"></div>
           </div>
         </div>

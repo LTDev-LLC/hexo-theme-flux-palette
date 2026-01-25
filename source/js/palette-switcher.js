@@ -84,8 +84,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         // Handler for manual background color input interactions
-        handleBgInput() {
-            this.useCustomBg = true;
+        handleBgInput(e) {
+            this.useCustomBg = true; // User manually picked a color, so we lock it
+            this.customBgColor = e.target.value;
             this.applyCustom();
         },
 
@@ -158,14 +159,14 @@ document.addEventListener('alpine:init', () => {
             if (mode === 'auto')
                 mode = this.systemIsDark() ? 'dark' : 'light';
 
-            // Set base class for fallback
             document.documentElement.setAttribute('data-palette', mode === 'dark' ? this.defaultDark : this.defaultLight);
 
-            // If useCustomBg is false, pass null so the engine calculates a derived background
-            this.updateCustomPalette(this.customColor, mode, this.useCustomBg ? this.customBgColor : null);
+            // If useCustomBg is false, pass null so the engine derives the background
+            this.updateCustomPalette(this.customColor, mode, (
+                this.useCustomBg ? this.customBgColor : null
+            ));
 
-            // Update the background color picker UI to match derived reality
-            // This ensures if you haven't touched the background, it spins with the accent
+            // This ensures if you haven't touched the background, the picker visual matches the page
             if (!this.useCustomBg)
                 this.updateBgPickerUI(this.customColor, mode);
         },
@@ -174,7 +175,11 @@ document.addEventListener('alpine:init', () => {
         updateBgPickerUI(accentHex, mode) {
             const accent = this.hexToHsl(accentHex),
                 isDark = mode === 'dark';
-            this.customBgColor = this.hslToHex(accent.h, isDark ? Math.min(accent.s, 15) : Math.min(accent.s, 25), isDark ? 6 : 100);
+            this.customBgColor = this.hslToHex(
+                accent.h,
+                isDark ? Math.min(accent.s, 15) : Math.min(accent.s, 25),
+                isDark ? 6 : 100
+            );
         },
 
         // Utility: Convert HSL to hex
