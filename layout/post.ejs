@@ -26,9 +26,9 @@
   <div class="post-toc" x-data="{ open: false }">
     <button type="button" class="post-btn post-toc-toggle" @click="open = !open" :aria-expanded="open">
       <span>Table of Contents</span>
-      <span x-text="open ? '−' : '+'"></span>
+      <span x-text="open ? '-' : '+'"></span>
     </button>
-    <div class="post-toc-content" x-show="open" x-transition>
+    <div class="post-toc-content" x-show="open" x-transition x-cloak>
       <%- postToc %>
     </div>
   </div>
