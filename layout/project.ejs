@@ -30,8 +30,17 @@
   </div>
   <% } %>
 
-  <div class="post-content" x-ref="content">
-    <%- page.project.content || '' %>
+  <div class="post-body-grid">
+    <div class="post-content" x-ref="content">
+      <%- page.project.content || '' %>
+    </div>
+
+    <% if (projectToc) { %>
+    <aside class="post-toc-desktop" x-data="tocSpy">
+      <div class="toc-title">On this page</div>
+      <%- projectToc %>
+    </aside>
+    <% } %>
   </div>
 
   <% if (page.project.project_tags && page.project.project_tags.length) { %>
@@ -72,3 +81,4 @@
   <% } %>
 </article>
 <script src="<%= url_for('/js/reading-progress.js') %>"></script>
+<script src="<%= url_for('/js/toc-spy.js') %>"></script>

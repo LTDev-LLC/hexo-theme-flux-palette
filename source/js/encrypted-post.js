@@ -144,8 +144,8 @@ document.addEventListener('alpine:init', () => {
             try {
                 const imgData = this.imagesData[id];
 
-                // Decrypt image + set source
-                imgEl.src = URL.createObjectURL(new Blob([
+                // Create blob URL
+                const blobUrl = URL.createObjectURL(new Blob([
                     await this.decryptChunk(
                         this.derivedKey,
                         imgData.ct,
@@ -153,6 +153,13 @@ document.addEventListener('alpine:init', () => {
                         imgData.at
                     )
                 ], { type: imgData.m }));
+
+                // Decrypt image + set source
+                imgEl.src = blobUrl;
+
+                // Update original source for lightbox support
+                // This ensures the lightbox uses the decrypted blob instead of the protected/offline path
+                imgEl.dataset.originalSrc = blobUrl;
 
                 // Remove from cache
                 delete this.imagesData[id];

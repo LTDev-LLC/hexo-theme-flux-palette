@@ -19,6 +19,31 @@ function renderMd(text) {
     }
 }
 
+// Auto-linkify headers for permalinks
+// This is a custom implementation to avoid Hexo's default behavior
+hexo.extend.filter.register('after_post_render', function (data) {
+    if (!data.content)
+        return data;
+
+    // Regex to capture h1-h6 with an auto-generated id
+    const regex = /<h([1-6])([^>]*?)id="([^"]+)"([^>]*?)>(.*?)<\/h\1>/gi;
+
+    // Replace with auto-linkified headers
+    data.content = data.content.replace(regex, (match, level, preAttrs, id, postAttrs, text) => {
+        // If the header already contains a link, strip it out
+        if (text.includes('<a '))
+            text = text.replace(/<a [^>]+>(.*?)<\/a>/gi, '$1');
+
+        // Clean title for the title attribute
+        const plainTitle = text.trim().replace(/<[^>]+>/g, '').replace(/"/g, '&quot;');
+
+        return `<h${level}${preAttrs}id="${id}"${postAttrs}><a href="#${id}" class="headerlink" title="${plainTitle}">${text}</a></h${level}>`;
+    });
+
+    // Return modified data
+    return data;
+});
+
 // Register child tag for tabs
 hexo.extend.tag.register('tab', function (args, content) {
     return `${MARKER.TAB_START}${args.join(' ').replace(/["']/g, '')}${MARKER.TAB_SPLIT}${content || ''}${MARKER.TAB_END}`;
@@ -198,14 +223,27 @@ hexo.extend.filter.register('after_post_render', function (data) {
         return `${match}
         <div class="code-actions">
             <button class="code-copy-btn" x-data="codeCopy" @click="copy" aria-label="Copy code">
-                <span class="copy-icon" x-show="!copied">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                </span>
-                <span class="copy-text" x-show="!copied">Copy</span>
-                <span class="copy-success" x-show="copied" x-cloak>
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Copied!
-                </span>
+                <template x-if="!copied">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span class="copy-icon">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        </span>
+                        <span class="copy-text">Copy</span>
+                    </div>
+                </template>
+                <template x-if="copied">
+                    <div style="display: flex; align-items: center; gap: 4px;" x-cloak>
+                        <span class="copy-success-icon">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        </span>
+                        <span class="copy-success">Copied!</span>
+                    </div>
+                </template>
             </button>
             <span class="code-lang">${lang.toUpperCase()}</span>
         </div>`;
@@ -214,3 +252,97 @@ hexo.extend.filter.register('after_post_render', function (data) {
     // Return modified data
     return data;
 });
+
+// Standard icons for alert types
+const ICONS = {
+    info: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+    warning: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+    danger: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+    success: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+    tip: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+};
+
+// Register alert tag
+hexo.extend.tag.register('alert', function (args, content) {
+    const type = (args[0] || 'info').toLowerCase(),
+        title = args.length > 1 ? args.slice(1).join(' ') : type.charAt(0).toUpperCase() + type.slice(1);
+
+    // Return alert HTML
+    return `
+    <div class="alert alert-${type}">
+        <div class="alert-title">
+            <span class="alert-icon">${ICONS[type] || ICONS['info']}</span>
+            <span>${title}</span>
+        </div>
+        <div class="alert-content">${renderMd(content || '')}</div>
+    </div>`;
+}, { ends: true });
+
+// Register the gallery tag
+hexo.extend.tag.register('gallery', function (args, content) {
+    const config = hexo.theme.config.gallery || {},
+        siteUrl = hexo.config.url;
+
+    // Determine if thumbnails are enabled (default to config, fallback to true)
+    let useThumbs = config.thumbnails !== false;
+
+    // Parse arguments to determine if thumbnails are enabled/disabled
+    args.forEach(arg => {
+        const [key, val] = arg.split(':');
+        if (key === 'thumb' || key === 'thumbnails')
+            useThumbs = val !== 'false' && val !== '0' && val !== 'off';
+    });
+
+    // Get service pattern, default wsrv.nl
+    const servicePattern = config.service_pattern || "https://wsrv.nl/?url=%s&w=300&h=300&fit=inside&q=80";
+
+    // Render markdown, strip <p> tags, and process images
+    let rendered = renderMd(content || '')
+        .replace(/<\/?p[^>]*>/g, '')
+        .replace(/<img([^>]*)>/gi, (match, attr) => {
+            const srcMatch = attr.match(/src=["']([^"']+)["']/),
+                originalSrc = srcMatch ? srcMatch[1] : '';
+            let thumbSrc = originalSrc;
+
+            // Generate thumbnail URL if enabled
+            if (useThumbs && originalSrc) {
+                try {
+                    let fullUrl = originalSrc;
+
+                    // Check if the image source is a local path (not starting with http/https)
+                    // and if the user has defined a site URL in _config.yml
+                    if (!/^https?:\/\//.test(originalSrc) && siteUrl)
+                        fullUrl = new URL(originalSrc, siteUrl).href;
+                    else if (/^https?:\/\//.test(originalSrc))
+                        fullUrl = originalSrc;
+
+                    // Only apply the thumbnail service pattern if we have a valid absolute URL
+                    if (/^https?:\/\//.test(fullUrl))
+                        thumbSrc = servicePattern.replace('%s', encodeURIComponent(fullUrl));
+                } catch { }
+            }
+
+            // Replace src with the generated thumbnail
+            let newAttr = attr.replace(/src=["']([^"']+)["']/, `src="${thumbSrc}"`);
+
+            // Add data-original-src pointing to the original image for the lightbox
+            newAttr += ` data-original-src="${originalSrc}"`;
+
+            // Extract Alt Text
+            const altMatch = newAttr.match(/alt=["']([^"']*)["']/),
+                altText = altMatch ? altMatch[1] : '';
+
+            // Ensure lazy loading is enabled
+            if (!newAttr.includes('loading='))
+                newAttr += ' loading="lazy"';
+
+            // Return the wrapped image component
+            return `<div class="gallery-item" x-data="{ loaded: false }" x-init="loaded = $refs.img.complete">
+                <img${newAttr} x-ref="img" @load="loaded = true">
+                ${altText ? `<span class="gallery-tag" x-show="loaded">${altText}</span>` : ''}
+            </div>`;
+        });
+
+    // Return gallery HTML
+    return `<div class="gallery-grid">${rendered}</div>`;
+}, { ends: true });

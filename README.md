@@ -1,43 +1,38 @@
 # Flux Palette
 
-A responsive blog/journal [Hexo](https://hexo.io/) theme designed around the idea of multiple color palettes.
+A responsive, high-performance blog/journal [Hexo](https://hexo.io/) theme designed around the idea of multiple color palettes, privacy, and rich content features.
 
 [DEMO](https://flux-palette.ltdev.llc/)
 
+## Table of Contents
 - [Features](#features)
-- [Install](#install)
-- [Configuration](#configuration)
-  * [Password protected posts](#password-protected-posts)
-  * [Read Time](#read-time)
-  * [Social listings](#social-listings)
-  * [Projects listings](#projects-listings)
-  * [Embeds](#embeds)
-  * [Comments](#comments)
-  * [Default _config.yml](#_configyml)
-  * [Search](#search)
+- [Installation](#installation)
+- [Global Configuration](#global-configuration)
+- [Writing Content](#writing-content)
+  - [Front Matter Options](#front-matter-options)
+  - [Password Protection](#password-protection)
+  - [Rich Content Tags](#rich-content-tags)
+    - [Alerts / Admonitions](#alerts)
+    - [Tabs](#tabs)
+    - [Accordions](#accordions)
+    - [Image Gallery](#image-gallery)
+    - [Media Embeds](#media-embeds)
+    - [Social Buttons](#social-buttons-tag)
+- [Projects System](#projects-system)
+- [Search Configuration](#search-configuration)
+- [Comments](#comments)
 
 ## Features
 
-- Mobile friendly/responsive
-- Multiple [color palettes](/source/css/palettes/)
-  * Support for user selection via dropdown or fixed via config
-  * A custom ("flux") color picker/palette generator
-- **SEO & Social Metadata** (Open Graph / Twitter Cards)
-- **Comments** (Giscus & Utterances support)
-- Password encrypted posts
-- Pre-compile JavaScript via [swc](https://swc.rs/)
-  * Used to compile Alpine.js features. Can compile any other added JavaScript.
-- Approx. read time (default 238 wpm)
-- RSS feed generator
-- URL shortener/post hash generator
-- Projects listings
-- Social links/icons
-- Local search
-- Archived post listing
+- **Dynamic Theming**: 15+ built-in color palettes with a "Flux" customizer that allows users to generate palettes from a single color.
+- **Rich Markdown**: Custom tags for Galleries, Tabs, Accordions, Alerts and more.
+- **Privacy First**: AES-256-GCM encrypted posts (password protected) with full encrypted image support.
+- **Projects Portfolio**: Dedicated section for projects with weighting and external buttons.
+- **Search**: Supports Local (offline), Upstash (Redis), and Supabase (Postgres) search backends.
+- **Performance**: Pre-compiles Alpine.js and custom scripts using [swc](https://swc.rs/) for optimized assets.
+- **Social**: Auto-generated OG/Twitter metadata, RSS feeds, and social linking.
 
-***Note: Uses [Alpine.js](https://alpinejs.dev/) for some UI features.***
-
-## Install
+## Installation
 
 1. In the `root` directory:
    * Optionally, install `@swc/core` for use with pre-compilation.
@@ -62,73 +57,118 @@ theme: flux-palette
 
 3. Run: `hexo clean ; hexo g ; hexo s`
 
-## Configuration
+## Writing Content
 
-### Password protected posts
+### Front Matter Options
 
-This is done in the front matter. Any post with `password` will be encrypted by that password.
-
-```yml
----
-title: Example Post
-date: 2025-12-10 00:00:00
-password: password-goes-here
----
-```
-
-### Read Time
-
-The front matter if your posts will be updated with the estimated read time information.
-Can be disabled; see [_config.yml](https://www.google.com/search?q=%23_config.yml) below.
+Standard Hexo front matter is supported, plus Flux-specific extensions:
 
 ```yml
 ---
-title: Example Post
-date: 2025-12-10 00:00:00
-read_time_minutes: 4
-read_time_words: 764
+title: My Awesome Post
+date: 2025-10-24
+tags: [hexo, theme]
+categories: [Updates]
+
+# Flux Specifics:
+password: "super-secret-password" # Encrypts the post
+cover: /images/banner.jpg         # Used for OpenGraph/Twitter cards
+comments: false                   # Disable comments for this specific post
+read_time_minutes: 5              # Override auto-calculated read time
 ---
 ```
 
-### Social listings
+### Password Protection
 
-You can display social links/icons in the sidenav by adding a `social` config to either the root `_config.yml` or the theme config.
+You can password-protect any post or project using `AES-256-GCM` encryption.
 
-```yml
-social:
-  - name: GitHub
-    url: https://github.com/LTDev-LLC/hexo-theme-flux-palette
-    icon: mdi:github
-  - name: Website
-    url: https://flux-palette.ltdev.llc/
-    icon: material-symbols:link
-```
-
-### Projects listings
-
-You can add a list of active projects using a `source/_projects` folder similar to how posts work. You may also sort the projects by `weight` (descending) in the front matter.
-
-##### Example `source/_projects/flux-palette.md`
+1. The content and images are encrypted at build time.
+2. The plaintext password is **removed** from the build output.
+3. A JSON payload is generated; the client decrypts it in the browser.
 
 ```yml
 ---
-title: Flux Palette
-date: 2025-12-1
-weight: 100
-buttons:
-  - name: GitHub
-    url: https://github.com/LTDev-LLC/hexo-theme-flux-palette
-  - name: Demo
-    url: https://flux-palette.pages.dev/
-project_summary: "The Flux Palette source."
-project_tags:
-  - javascript
-  - hexo
+title: Secret Diary
+password: my_password_123
+# OR use an environment variable (recommended for public repos)
+password: env:MY_SECRET_VAR
 ---
-This is a post about my project...
 ```
 
-### Embeds
+### Rich Content Tags
+
+Flux Palette extends Markdown with several powerful tags implemented in `scripts/markdown-enhancements.js`.
+
+#### Alerts
+
+Create callout boxes for Info, Warning, Danger, Success, or Tips.
+
+```markdown
+{% alert info Information %}
+This is a standard info box.
+{% endalert %}
+
+{% alert warning "Watch Out" %}
+You can use quotes for titles with spaces.
+{% endalert %}
+
+{% alert tip %}
+If no title is provided, it defaults to the type name.
+{% endalert %}
+
+```
+
+*Supported types:* `info`, `warning`, `danger`, `success`, `tip`.
+
+#### Tabs
+
+Organize content into tabbed interfaces.
+
+```markdown
+{% tabs %}
+    {% tab "First Tab" %}
+    This is the content of the first tab.
+    {% endtab %}
+
+    {% tab Second %}
+    Content for the second tab.
+    {% endtab %}
+{% endtabs %}
+
+```
+
+#### Accordions
+
+Collapsible content sections.
+
+```markdown
+{% accordions %}
+    {% accordion "Click to expand" %}
+    Hidden content revealed upon clicking.
+    {% endaccordion %}
+
+    {% accordion "Another Item" %}
+    More hidden content.
+    {% endaccordion %}
+{% endaccordions %}
+
+```
+
+#### Image Gallery
+
+Creates a responsive grid of images. If configured in `_config.yml`, it automatically generates thumbnails using an external service (like wsrv.nl) for performance.
+
+```markdown
+{% gallery %}
+![Image 1](/images/photo1.jpg)
+![Image 2](/images/photo2.jpg)
+![Image 3 with Caption](/images/photo3.jpg "My Caption")
+{% endgallery %}
+```
+
+*Options:* You can pass `thumb:false` to disable thumbnails for a specific gallery: `{% gallery thumb:false %}`.
+
+### Media Embeds
 
 You can embed content from various platforms like YouTube, Spotify, Vimeo, Twitch, and TikTok within your posts using a powerful `embed` tag.
 
@@ -144,7 +184,7 @@ The generic `embed` tag is the most flexible way to embed content.
 
 * `<url/id>`: The full URL or the ID of the content to embed.
 * `[platform_hint]`: (Optional) If you use an ID instead of a URL, you must provide a platform hint. Supported platforms: `youtube`, `spotify`, `vimeo`, `twitch`, `tiktok`.
-* `[type_hint]`: (Optional) For Spotify, you can specify `track`, `playlist`, or `artist`. For Twitch, you can specify `video` or `channel`.
+* `[type_hint]`: (Optional) For Spotify, you can specify `track`, `playlist`, `artist`, or `episode`. For Twitch, you can specify `video` or `channel`.
 
 **Examples:**
 
@@ -177,232 +217,93 @@ date: 2025-12-1
 
 {# TikTok from URL #}
 {% embed https://www.tiktok.com/@scout2015/video/6718335390845095173 %}
-
 ```
 
-### Comments
+#### Social Buttons Tag
 
-Flux Palette supports privacy-focused comment systems: [Giscus](https://www.google.com/search?q=https://giscus.app/) and [Utterances](https://www.google.com/search?q=https://utteranc.es/). Enable them in `_config.yml`.
-
-You may disable comments on specific posts or projects in the front matter. Comments are disabled for any [password protected posts](#password-protected-posts).
-
-**Giscus Example:**
+Display your social links anywhere in a post (uses the `social` config from `_config.yml`).
 
 ```yml
-comments:
-  enabled: true
-  service: giscus
-  giscus:
-    repo: "username/repo"
-    repo_id: "R_..."
-    category: "Announcements"
-    category_id: "DIC_..."
-    mapping: "pathname"
-    reactions_enabled: "1"
-    emit_metadata: "0"
-    input_position: "top"
-    theme: "preferred_color_scheme"
-    lang: "en"
+social:
+  - name: GitHub
+    url: https://github.com/LTDev-LLC/hexo-theme-flux-palette
+    icon: mdi:github
+  - name: Website
+    url: https://flux-palette.ltdev.llc/
+    icon: material-symbols:link
 ```
 
-**Utterances Example:**
+## Projects System
 
-```yml
-comments:
-  enabled: true
-  service: utterances
-  utterances:
-    repo: "username/repo"
-    issue_term: "pathname"
-    label: "comments"
-    theme: "github-light"
-```
+Flux Palette includes a dedicated portfolio system separate from the blog.
 
-Comments may also be disabled per-post or project in the front matter.
+1. Create a folder: `source/_projects`.
+2. Add Markdown files.
+3. Use project-specific front matter.
+
+**Example `source/_projects/my-app.md`:**
 
 ```yml
 ---
-title: Example Post
-date: 2025-12-10 00:00:00
-comments: false
+title: My Cool App
+date: 2025-01-01
+weight: 100            # Higher numbers appear first
+project_tags: [swift, ios]
+project_summary: "A short description shown on the index page."
+buttons:
+  - name: App Store
+    url: [https://apple.com/](https://apple.com/)...
+  - name: GitHub
+    url: [https://github.com/](https://github.com/)...
 ---
+Detailed project description goes here...
 ```
 
-### Search
+## Search Configuration
 
-Flux Palette supports flexible search providers, allowing you to choose between a simple local index or powerful cloud databases. Configure your preferred provider in `_config.yml`.
+Flux supports three search providers. Configure in `_config.yml`.
 
-**Supported Providers:** `local`, `upstash`, `supabase`
+### 1. Local (Default)
+
+Generates a `search.json` file. Best for static hosting with no backend.
 
 ```yml
 search:
   enabled: true
-  title: "Search"
-  service: "local" # Change to 'upstash' or 'supabase'
-  # ... provider specific config below
+  service: "local"
 ```
 
-#### 1. Local Search (Default)
+### 2. Upstash (Redis)
 
-Generates a `search.json` file at build time. Best for small static sites or when you want zero external dependencies.
-
-* **Pros:** Zero setup, completely free, works offline once loaded, private.
-* **Cons:** The entire index is downloaded by the client (can be heavy for large sites), basic "fuzzy" matching.
-
-#### 2. Upstash (Redis)
-
-Uses a serverless Redis database to store the index. This is the recommended option for performance and scalability.
-[Sign up at Upstash](https://upstash.com/)
-
-**Setup:**
-
-1. Create a Redis database in the Upstash console.
-2. Scroll down to the **REST API** section.
-3. Copy the `UPSTASH_REDIS_REST_URL`.
-4. Copy the `UPSTASH_REDIS_REST_TOKEN` (use this as your primary `token` for writing during builds).
-5. Copy a Read-Only token to enable search support on the client side as `read_token`.
-
-**Configuration:**
+High performance, serverless.
 
 ```yml
 search:
-  enabled: true
-  title: "Search"
   service: upstash
   upstash:
     url: "https://your-db.upstash.io"
-    token: "your_primary_token" # Used during 'hexo generate' to upload index
-    read_token: "your_read_only_token" # Exposed to client for searching
-    index: "flux" # Prefix for keys
+    token: "your_write_token"      # Used during 'hexo g'
+    read_token: "your_read_token"  # Exposed to client
+    index: "flux"
 ```
+### 3. Supabase (Postgres)
 
-* **Pros:** Extremely fast (millisecond latency), excellent fuzzy matching, generous free tier (10k req/day).
-* **Cons:** Requires an external account.
-
-#### 3. Supabase (PostgreSQL)
-
-Uses a Postgres database to store and query the index.
-[Sign up at Supabase](https://supabase.com/)
-
-**Setup:**
-
-1. Create a new project.
-2. Go to the **SQL Editor** and run the following commands to create tables and enable public read access:
-```sql
--- Create Tables
-CREATE TABLE flux_search_docs (
-  id text PRIMARY KEY,
-  title text,
-  url text,
-  date text,
-  type text,
-  excerpt text,
-  encrypted boolean
-);
-CREATE TABLE flux_search_index (
-  word text PRIMARY KEY,
-  doc_ids text[]
-);
-
--- Enable RLS
-ALTER TABLE flux_search_docs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE flux_search_index ENABLE ROW LEVEL SECURITY;
-
--- Allow public read access
-CREATE POLICY "Public read docs" ON flux_search_docs FOR SELECT TO public USING (true);
-CREATE POLICY "Public read index" ON flux_search_index FOR SELECT TO public USING (true);
-```
-3. Go to **Project Settings > Data API**.
-4. Copy the **Project URL**.
-4. Go to **Project Settings > API Keys**.
-6. Copy the `Publishable Key` key (use as `pub_key` for reading).
-5. Copy the `Secret Keys` key (use as `sec_key` for writing).
-
-**Configuration:**
+Uses Postgres Full Text Search.
 
 ```yml
 search:
-  enabled: true
-  title: "Search"
   service: supabase
   supabase:
-    url: "https://your-project.supabase.co"
-    sec_key: "your_service_role_key" # Used during 'hexo generate'
-    pub_key: "your_anon_key" # Exposed to client
-    table: "flux_search" # Prefix for tables (e.g. flux_search_docs)
+    url: "https://your-proj.supabase.co"
+    sec_key: "service_role_key"    # Used during 'hexo g'
+    pub_key: "anon_public_key"     # Exposed to client
+    table: "flux_search"
 ```
+## Comments
 
-* **Pros:** Robust relational database, highly scalable, reliable ecosystem.
-* **Cons:** Requires running SQL setup commands manually as well as an external account.
-
-### _config.yml
-
-Below is the default config for Flux Palette found within [_config.yml](/_config.yml).
+Supports privacy-focused comment systems.
 
 ```yml
-menu: # site menu
-  Home: /
-  Projects: /projects/
-  Misc:
-    Archives: /archives/
-    Search: /search/
-    Feed: /rss.xml
-
-home: # home page configuration
-  mode: blog # "blog" or "projects"
-
-blog: # blog page configuration
-  title: "Blog" # custom title
-
-projects: # projects page configuration
-  title: "Projects" # custom title
-
-search: # search
-  enabled: true # set to false to turn off search
-  title: "Search" # page title
-  service: "local" # Change to 'upstash' or 'supabase'
-  upstash:
-    url: "https://your-db.upstash.io"
-    token: "your_primary_token" # Used during 'hexo generate' to upload index
-    read_token: "your_read_only_token" # Exposed to client for searching
-    index: "flux" # Prefix for keys
-  supabase:
-    url: "https://your-project.supabase.co"
-    sec_key: "your_service_role_key" # Used during 'hexo generate'
-    pub_key: "your_anon_key" # Exposed to client
-    table: "flux_search" # Prefix for tables (e.g. flux_search_docs)
-
-backtotop: # back to top button
-  enabled: true # set to false to turn off back to top button
-
-sidebar:
-  recent_projects:
-    enabled: true # set false to hide the section
-    limit: 5 # how many recent projects to show
-  social_buttons: # social buttons
-    enabled: true # set to false to turn off social buttons
-    size: 1.6em # icon size
-  palette_selector: # palette selector
-    enabled: true # set to false to turn off palette selector
-    default_dark: solar-amber # default dark palette
-    default_light: paper-and-ink # default light palette
-    palette_folder: css/palettes # folder for palette css files
-
-rss: # RSS feed options
-  path: rss.xml # output file (relative to root)
-  limit: 20 # number of posts
-  include_drafts: false
-  include_future: false
-  mark_encrypted_in_title: true # prefix [Encrypted] to titles
-  add_encrypted_element: true # add <encrypted>true</encrypted>
-
-short_url: # short URL options
-  enabled: true # set to false to turn off all short URLs
-  length: 6 # characters in hash
-
-# Enable comments service (either 'giscus' or 'utterances')
-# See https://giscus.app/#repository for giscus settings
-# See https://utteranc.es/#install for utterances settings
 comments:
   enabled: true
   service: giscus # Options: 'giscus', 'utterances'
@@ -422,22 +323,31 @@ comments:
     issue_term: "pathname"
     label: "comments"
     theme: "github-light"
+```
 
-swc:
-  enabled: true # set to false to turn off SWC
-  target: es2020 # target environment
-  minify: true # set to false to disable minification
-  include: # folders to include
-    - js/
-  exclude: [] # folders to exclude
+## Attribution
 
-read_time: # read time options
-  enabled: true # set to false to turn off read time
-  write_front_matter: false # write read time to front matter
+If you enjoy this theme, please keep the attribution in the footer enabled.
 
-# Show theme credit. Feeds our ego. Please, we're starving.
-attribution: # attribution options
-  enabled: true # set to false to turn off attribution
-  link: https://ltdev.llc/projects/flux-palette/
+```yml
+attribution:
+  enabled: true
   text: Flux Palette by LTDev LLC
+  link: https://ltdev.llc/projects/flux-palette/
+```
+
+### Root _config.yml
+
+To enable syntax highlighting, use the following in your project root `_config.yml`.
+
+```yml
+# Syntax highlighting
+syntax_highlighter: highlight.js
+highlight:
+  enable: true # set to false to turn off syntax highlighting
+  line_number: true
+  auto_detect: false
+  tab_replace: ''
+  wrap: true
+  hljs: false # required to be false for Flux Palette styles
 ```
