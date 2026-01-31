@@ -85,6 +85,10 @@ short_url:
   enabled: true
   length: 6
 
+# Link preview tooltip for internal links
+link_previews:
+  enabled: true
+
 # --- INTEGRATIONS & EXTERNAL SERVICES ---
 
 # RSS Feed Generation

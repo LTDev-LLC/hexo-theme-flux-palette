@@ -346,3 +346,12 @@ hexo.extend.tag.register('gallery', function (args, content) {
     // Return gallery HTML
     return `<div class="gallery-grid">${rendered}</div>`;
 }, { ends: true });
+
+// The spoiler tag for inline spoilers/redactions
+function spoilerTag(args) {
+    return `<span class="spoiler" onclick="this.classList.toggle('revealed')">${args.join(' ')}</span>`;
+}
+
+// Register the spoiler/redact tags
+hexo.extend.tag.register('spoiler', spoilerTag, { ends: false });
+hexo.extend.tag.register('redact', spoilerTag, { ends: false });

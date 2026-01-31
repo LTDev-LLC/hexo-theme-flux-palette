@@ -1441,6 +1441,32 @@ figure {
     }
 }
 
+/* Link preview tooltip */
+.link-preview-tooltip {
+    position: fixed;
+    z-index: 1000;
+    width: 280px;
+    background: var(--bg-card);
+    border: 1px solid var(--accent-soft);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-tooltip);
+    pointer-events: none;
+    font-size: 0.85rem;
+}
+
+.link-preview-tooltip strong {
+    display: block;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+}
+
+.link-preview-tooltip p {
+    margin: 0;
+    color: var(--text-light);
+    line-height: 1.4;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

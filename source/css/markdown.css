@@ -604,3 +604,25 @@ figure.highlight table {
 .alert-danger .alert-content {
     color: var(--text);
 }
+
+/* Spoiler/redacted text */
+.spoiler {
+    background-color: var(--text);
+    color: var(--text);
+    cursor: pointer;
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast);
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+.spoiler:hover,
+.spoiler.revealed {
+    background-color: var(--accent-soft);
+    color: var(--text);
+}
+
+.spoiler:active {
+    background-color: transparent;
+}

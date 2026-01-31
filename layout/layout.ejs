@@ -28,6 +28,10 @@
   <% } %>
 
   <%- partial('partial/lightbox') %>
+
+  <% if (theme.link_previews && theme.link_previews.enabled) { %>
+  <%- partial('partial/link-previews') %>
+  <% } %>
 </body>
 
 </html>
