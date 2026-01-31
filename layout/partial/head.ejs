@@ -31,6 +31,7 @@
 <% if (ogImage) { %>
 <meta name="twitter:image" content="<%= url_for(ogImage) %>">
 <% } %>
+<script src="<%= url_for('/js/view-transitions.js') %>"></script>
 <%
   var palettes = palette_list ? palette_list() : [],
     pSelector = (theme.sidebar && theme.sidebar.palette_selector) ? theme.sidebar.palette_selector : {},
@@ -77,6 +78,6 @@
 <link rel="stylesheet" href="<%= url_for('/css/palettes.css') %>">
 <link rel="stylesheet" href="<%= url_for('/css/base.css') %>">
 <link rel="stylesheet" href="<%= url_for('/css/markdown.css') %>">
+<script src="<%= url_for('/js/code-copy.js') %>"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"></script>
-<script src="<%= url_for('/js/code-copy.js') %>"></script>
