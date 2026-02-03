@@ -1,18 +1,27 @@
-// View Transitions API SPA-style navigation with Alpine support.
+// View Transitions API SPA-style navigation with Alpine support
 (function () {
     // Bail out when the browser doesn't support view transitions
     if (!('startViewTransition' in document))
         return;
 
+    // Track the current URL to compare against for hash changes
+    let currentPath = window.location.pathname + window.location.search;
+
     // Decide if a link click should be handled by the transition
-    function shouldHandleLink(link, event) {
+    function shouldHandleLink(link, event = null) {
         // Basic validation & Accessibility/UX checks
-        if (!link?.href || event.defaultPrevented)
+        if (!link?.href)
             return false;
 
-        // Ignore modified clicks (Ctrl, Command, Shift, Alt) to allow 'open in new tab'
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-            return false;
+        // Ignore non-user-initiated events
+        if (event) {
+            // Ignore default clicks
+            if (event?.defaultPrevented)
+                return false;
+            // Ignore modified clicks (Ctrl, Command, Shift, Alt) to allow 'open in new tab'
+            if (event?.metaKey || event?.ctrlKey || event?.shiftKey || event?.altKey)
+                return false;
+        }
 
         // Ignore external targets or download attributes
         if (link.target && link.target !== '_self')
@@ -36,16 +45,33 @@
             if (!['http:', 'https:'].includes(url.protocol))
                 return false;
 
-            // Ignore same-page anchor links (e.g., #section-id)
-            const isSamePage = url.pathname === now.pathname && url.search === now.search;
-            if (url.hash && isSamePage)
+            // Ignore anchors on the same page
+            if (url.pathname === now.pathname) {
+                // Ignore anchors with a hash on the same page
+                if (url.hash.length >= 1)
+                    return false;
+                // Ignore search parameters on the same page
+                else if (url.search.length >= 1)
+                    return false;
+            }
 
-                return false;
+            // Return true for valid URLs
             return true;
         } catch {
             // Handle invalid URLs gracefully
             return false;
         }
+    }
+
+    // Helper to handle scrolling to #hash or top
+    function scrollToTarget(hash) {
+        if (hash) {
+            const id = decodeURIComponent(hash.substring(1)),
+                target = document.getElementById(id) || document.getElementsByName(id)[0];
+            if (target)
+                return target.scrollIntoView();
+        }
+        window.scrollTo(0, 0);
     }
 
     // Recreate scripts so they execute after swapping the body
@@ -59,7 +85,7 @@
             if (type === 'application/ld+json')
                 return;
 
-            // Create a new script element.
+            // Create a new script element
             const newScript = document.createElement('script');
             Array.prototype.forEach.call(oldScript.attributes, attr => {
                 newScript.setAttribute(attr.name, attr.value)
@@ -82,50 +108,65 @@
         return Promise.all(loaders);
     }
 
-    // Fetch the next page, swap the body, and re-init Alpine.
+    // Fetch the next page, swap the body, and re-init Alpine
     async function swapPage(url, push) {
-        // Fetch the new page
-        let response = await fetch(url, {
-            headers: {
-                'X-Requested-With': 'flux-palette/view-transitions'
+        try {
+            // Show loading state
+            document.documentElement.classList.add('is-loading');
+
+            // Fetch the new page
+            let response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'flux-palette/view-transitions'
+                }
+            });
+
+            // Bail out if the request failed
+            if (!response.ok)
+                throw new Error('Failed to fetch page');
+
+            // Parse the HTML
+            let doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+
+            // Bail out if the HTML is invalid
+            if (!doc || !doc.body)
+                throw new Error('Invalid HTML');
+
+            // Stop Alpine from observing mutations on the old page
+            let alpine = window.Alpine;
+            if (alpine && typeof alpine.stopObservingMutations === 'function')
+                alpine.stopObservingMutations();
+
+            // Swap the title and body
+            document.title = doc.title || document.title;
+            document.body.replaceWith(doc.body);
+            await reexecuteBodyScripts(document.body);
+
+            // Re-init Alpine
+            if (alpine && typeof alpine.initTree === 'function') {
+                document.dispatchEvent(new CustomEvent('alpine:init'));
+                alpine.initTree(document.body);
             }
-        });
 
-        // Bail out if the request failed
-        if (!response.ok)
-            throw new Error('Failed to fetch page');
+            // Start Alpine observing mutations
+            if (alpine && typeof alpine.startObservingMutations === 'function')
+                alpine.startObservingMutations();
 
-        // Parse the HTML
-        let doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+            // Swap the URL and scroll
+            if (push) {
+                history.pushState(null, '', url);
+                currentPath = window.location.pathname + window.location.search;
+            }
 
-        // Bail out if the HTML is invalid
-        if (!doc || !doc.body)
-            throw new Error('Invalid HTML');
-
-        // Stop Alpine from observing mutations on the old page
-        let alpine = window.Alpine;
-        if (alpine && typeof alpine.stopObservingMutations === 'function')
-            alpine.stopObservingMutations();
-
-        // Swap the title and body
-        document.title = doc.title || document.title;
-        document.body.replaceWith(doc.body);
-        await reexecuteBodyScripts(document.body);
-
-        // Re-init Alpine
-        if (alpine && typeof alpine.initTree === 'function') {
-            document.dispatchEvent(new CustomEvent('alpine:init'));
-            alpine.initTree(document.body);
+            // Scroll to the top or target
+            scrollToTarget(window.location.hash);
+        } catch {
+            // If fetch fails, fall back to standard navigation
+            window.location.href = url;
+        } finally {
+            // Hide loading state
+            document.documentElement.classList.remove('is-loading');
         }
-
-        // Start Alpine observing mutations
-        if (alpine && typeof alpine.startObservingMutations === 'function')
-            alpine.startObservingMutations();
-
-        // Swap the URL and scroll
-        if (push)
-            history.pushState(null, '', url);
-        window.scrollTo(0, 0);
     }
 
     // Wrap navigation in a view transition
@@ -142,6 +183,12 @@
         navigate(link.href, true);
     });
 
-    // Handle back/forward navigation
-    window.addEventListener('popstate', () => navigate(window.location.href, false));
+    // Handle back/forward navigation; ignore hash changes
+    window.addEventListener('popstate', function () {
+        const newPath = window.location.pathname + window.location.search;
+        if (newPath === currentPath)
+            return;
+        currentPath = newPath;
+        navigate(window.location.href, false);
+    });
 })();

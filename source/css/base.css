@@ -87,6 +87,45 @@ svg {
     display: block;
 }
 
+/* Page loading */
+html::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--accent);
+    z-index: 10000;
+    transform: translateX(-100%);
+    transition: transform 0.4s ease-in;
+    pointer-events: none;
+}
+
+html.is-loading::before {
+    transform: translateX(-30%);
+    animation: flux-loading-shimmer 2s infinite linear;
+}
+
+@keyframes flux-loading-shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    50% {
+        transform: translateX(-10%);
+    }
+    100% {
+        transform: translateX(0%);
+        opacity: 0;
+    }
+}
+
+html.is-loading body {
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    cursor: wait;
+}
+
 /* Layout */
 .site-main {
     flex: 1;
