@@ -1,4 +1,6 @@
 'use strict';
+const { slugize } = require('hexo-util');
+
 // Markers for tab and accordion tags
 const MARKER = {
     TAB_START: '@@FLUX_TAB_HEAD@@',
@@ -6,7 +8,10 @@ const MARKER = {
     TAB_END: '@@FLUX_TAB_FOOT@@',
     ACC_START: '@@FLUX_ACC_HEAD@@',
     ACC_SPLIT: '@@FLUX_ACC_SPLIT@@',
-    ACC_END: '@@FLUX_ACC_FOOT@@'
+    ACC_END: '@@FLUX_ACC_FOOT@@',
+    TL_START: '@@FLUX_TL_HEAD@@',
+    TL_SPLIT: '@@FLUX_TL_SPLIT@@',
+    TL_END: '@@FLUX_TL_FOOT@@'
 };
 
 // Helper to safely render Markdown string to HTML
@@ -17,6 +22,32 @@ function renderMd(text) {
         console.error('[Flux Tags] Render error:', e);
         return text;
     }
+}
+
+// Helper to clean tag arguments
+function cleanArgs(str) {
+    const s = (str || '').trim();
+    if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'")))
+        return s.substring(1, s.length - 1);
+    return s;
+};
+
+// Helper to dedent a string
+function dedent(str = '') {
+    // Normalize line endings
+    str = str.replace(/\r\n/g, '\n')
+        .replace(/^\n+|\n+$/g, '');
+
+    // Find smallest indent across non-empty lines
+    const indents = str.match(/^[ \t]+(?=\S)/gm);
+    if (!indents)
+        return str;
+
+    // Find smallest indent
+    let min = indents.reduce((m, x) => Math.min(m, x.length), Infinity);
+
+    // Dedent all lines by that amount
+    return str.replace(new RegExp(`^[ \\t]{${min}}`, 'gm'), '');
 }
 
 // Auto-linkify headers for permalinks
@@ -222,6 +253,7 @@ hexo.extend.filter.register('after_post_render', function (data) {
         // Inject container with language label and copy button
         return `${match}
         <div class="code-actions">
+            <span class="code-lang">${lang.toUpperCase()}</span>
             <button class="code-copy-btn" x-data="codeCopy" @click="copy" aria-label="Copy code">
                 <template x-if="!copied">
                     <div style="display: flex; align-items: center; gap: 4px;">
@@ -245,7 +277,16 @@ hexo.extend.filter.register('after_post_render', function (data) {
                     </div>
                 </template>
             </button>
-            <span class="code-lang">${lang.toUpperCase()}</span>
+            <button class="code-copy-btn" x-data="codeImage" @click="capture" aria-label="Save as Image">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <span>Save as Image</span>
+                </div>
+            </button>
         </div>`;
     });
 
@@ -355,3 +396,116 @@ function spoilerTag(args) {
 // Register the spoiler/redact tags
 hexo.extend.tag.register('spoiler', spoilerTag, { ends: false });
 hexo.extend.tag.register('redact', spoilerTag, { ends: false });
+
+// Clean up timeline tag lines
+hexo.extend.filter.register('before_post_render', (data) => {
+    if (!data.content)
+        return data;
+
+    // If a timeline tag line is indented (e.g. inside a list), Markdown turns it into code
+    // before Hexo can parse tags. This normalizes ONLY those tag lines.
+    data.content = data.content.replace(/^\s*(\{%\s*(?:timeline|endtimeline|timeline_item|endtimeline_item)\b[^%]*%\})\s*$/gm, '$1');
+
+    return data;
+});
+
+// Register child tag for timeline items
+hexo.extend.tag.register('timeline_item', function (args, content) {
+    // Clean up arguments
+    const date = cleanArgs(args[0]),
+        title = cleanArgs(args.slice(1).join(' '));
+
+    // Return timeline item
+    return `${MARKER.TL_START}${date}${MARKER.TL_SPLIT}${title}${MARKER.TL_SPLIT}${content || ''}${MARKER.TL_END}`;
+}, { ends: true });
+
+// Register parent tag for timeline
+hexo.extend.tag.register('timeline', function (args, content) {
+    const raw = content || '',
+        chunks = raw.split(MARKER.TL_START),
+        items = [];
+
+    // Determine ID: Use custom arg if provided, otherwise auto-increment
+    const customId = cleanArgs(args[0]);
+    let timelineId;
+
+    // If a custom ID was provided, use it
+    if (customId)
+        timelineId = customId;
+    else {
+        if (this.flux_timeline_count === undefined)
+            this.flux_timeline_count = 0;
+        timelineId = ++this.flux_timeline_count;
+    }
+
+    // Iterate chunks (skip index 0 as it's the content before the first item)
+    for (let i = 1; i < chunks.length; i++) {
+        const chunk = chunks[i],
+            endIdx = chunk.indexOf(MARKER.TL_END);
+
+        // If marker is incomplete, skip
+        if (endIdx === -1)
+            continue;
+
+        // Add item to collection if valid
+        const parts = chunk.substring(0, endIdx)
+            .split(MARKER.TL_SPLIT);
+
+        // We expect: Date, Title, Content
+        if (parts.length >= 3)
+            items.push({
+                date: parts[0],
+                title: parts[1],
+                // Render the body content using the existing helper
+                content: renderMd(dedent(parts.slice(2).join(MARKER.TL_SPLIT)))
+            });
+    }
+
+    // If no items were successfully parsed, render raw content to reveal errors
+    if (items.length === 0)
+        return renderMd(raw);
+
+    // Build timeline HTML with Alpine.js scroll logic
+    const html = items.map(item => {
+        const slug = slugize(item.title, { transform: 1 }),
+            id = `Timeline-${timelineId}-${slug}`;
+        return `
+        <div class="timeline-item"
+            id="${id}"
+            :class="{ 'active': activeId === '${id}' }"
+            @click="window.location.hash = '${id}'"
+            style="cursor: pointer;"
+        >
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+                <div class="timeline-header">
+                    <span class="timeline-date">${item.date}</span>
+                    <h4 class="timeline-title">${item.title}</h4>
+                </div>
+                <div class="timeline-body">${item.content}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    // Return timeline HTML
+    return `<div class="timeline" x-data="{
+        activeId: '',
+        init() {
+            this.check();
+            window.addEventListener('hashchange', () => this.check());
+        },
+        check() {
+            if (!window.location.hash) {
+                this.activeId = '';
+                return;
+            }
+            try {
+                const id = decodeURIComponent(window.location.hash.substring(1));
+                this.activeId = id;
+                const el = document.getElementById(id);
+                if (el && this.$el.contains(el))
+                    this.$nextTick(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+            } catch (e) {}
+        }
+    }">${html}</div>`;
+}, { ends: true });

@@ -17,6 +17,18 @@
   function isExternal(href) {
     return /^https?:\/\//i.test(href);
   }
+
+  function parseNav(item) {
+    var str = String(item),
+      spaceIndex = str.indexOf(' ');
+    if (spaceIndex === -1)
+      return { href: str, attrs: '' };
+    var href = str.substring(0, spaceIndex),
+      attrs = str.substring(spaceIndex + 1).trim();
+    if ((attrs.startsWith('"') && attrs.endsWith('"')) || (attrs.startsWith("'") && attrs.endsWith("'")))
+      attrs = attrs.substring(1, attrs.length - 1);
+    return { href: href, attrs: attrs };
+  }
 %>
 <header class="site-header" x-data="{ isOpen: false }" x-on:resize.window="if (window.innerWidth > 768) isOpen = false">
   <div class="header-inner">
@@ -48,12 +60,14 @@
           menuKeys.forEach(function(label) {
             var item = mergedMenu[label];
             if (typeof item === 'string') {
-              var href = item,
-                external = isExternal(href),
-                url = external ? href : url_for(href);
+              var parsed = parseNav(item),
+                  href = parsed.href,
+                  attrs = parsed.attrs,
+                  external = isExternal(href),
+                  url = external ? href : url_for(href);
         %>
         <li>
-          <a href="<%= url %>" <% if (external) { %> target="_blank" rel="noopener" <% } %>>
+          <a href="<%= url %>" <% if (external) { %> target="_blank" rel="noopener" <% } %> <%- attrs %>>
             <%= label %>
           </a>
         </li>
@@ -68,20 +82,25 @@
           <ul class="dropdown-menu" x-show="open" x-transition.opacity x-cloak>
             <%
               Object.keys(item).forEach(function(subLabel) {
-                var subHref = item[subLabel],
-                  subExternal = isExternal(subHref),
-                  subUrl = subExternal ? subHref : url_for(subHref);
+                var subItem = item[subLabel],
+                    parsed = parseNav(subItem),
+                    subHref = parsed.href,
+                    subAttrs = parsed.attrs,
+                    subExternal = isExternal(subHref),
+                    subUrl = subExternal ? subHref : url_for(subHref);
             %>
             <li>
-              <a href="<%= subUrl %>" <% if (subExternal) { %> target="_blank" rel="noopener" <% } %>>
+              <a href="<%= subUrl %>" <% if (subExternal) { %> target="_blank" rel="noopener" <% } %> <%- subAttrs %>>
                 <%= subLabel %>
               </a>
             </li>
-            <% }); %>
+            <% });
+            %>
           </ul>
         </li>
         <% } %>
-        <% }); %>
+        <% });
+        %>
       </ul>
     </nav>
   </div>

@@ -18,6 +18,7 @@ A responsive, high-performance blog/journal [Hexo](https://hexo.io/) theme desig
     - [Image Gallery](#image-gallery)
     - [Media Embeds](#media-embeds)
     - [Social Buttons](#social-buttons-tag)
+    - [Timeline](#timeline)
 - [Projects System](#projects-system)
 - [Search Configuration](#search-configuration)
 - [Comments](#comments)
@@ -167,6 +168,25 @@ Creates a responsive grid of images. If configured in `_config.yml`, it automati
 ```
 
 *Options:* You can pass `thumb:false` to disable thumbnails for a specific gallery: `{% gallery thumb:false %}`.
+
+#### Timeline
+
+Create vertical timelines for project history, biographies, or changelogs.
+
+```markdown
+{% timeline %}
+    {% timeline_item "Jan 2024" "Inception" %}
+    The initial concept for the project was defined.
+    {% endtimeline_item %}
+
+    {% timeline_item "Mar 2024" "Alpha Release" %}
+    The first internal release was made available to the team.
+
+    * Completed core engine
+    * Added basic UI components
+    {% endtimeline_item %}
+{% endtimeline %}
+```
 
 ### Media Embeds
 

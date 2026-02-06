@@ -10,7 +10,7 @@ menu:
   Misc:
     Archives: /archives/
     Search: /search/
-    Feed: /rss.xml
+    Feed: /rss.xml "data-no-view-transition='true'"
 
 # --- LAYOUT & APPEARANCE ---
 # Controls the visual structure and default themes
