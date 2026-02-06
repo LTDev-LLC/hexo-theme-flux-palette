@@ -46,7 +46,8 @@ $ npm install @swc/core --save
 OR updating:
 
 ```bash
-$ cp themes/flux-palette/_config.yml theme-config.yml ; rm -rf themes/flux-palette$ git clone --depth=1 https://github.com/LTDev-LLC/hexo-theme-flux-palette.git themes/flux-palette ; rm -rf !$/.git
+$ cp themes/flux-palette/_config.yml theme-config.yml ; rm -rf themes/flux-palette
+$ git clone --depth=1 https://github.com/LTDev-LLC/hexo-theme-flux-palette.git themes/flux-palette ; rm -rf !$/.git
 $ mv theme-config.yml themes/flux-palette/_config.yml
 ```
 
@@ -272,9 +273,9 @@ project_tags: [swift, ios]
 project_summary: "A short description shown on the index page."
 buttons:
   - name: App Store
-    url: [https://apple.com/](https://apple.com/)...
+    url: https://apple.com/
   - name: GitHub
-    url: [https://github.com/](https://github.com/)...
+    url: https://github.com/
 ---
 Detailed project description goes here...
 ```
