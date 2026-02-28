@@ -46,8 +46,7 @@ $ npm install @swc/core --save
 OR updating:
 
 ```bash
-$ cp themes/flux-palette/_config.yml theme-config.yml ; rm -rf themes/flux-palette
-$ git clone --depth=1 https://github.com/LTDev-LLC/hexo-theme-flux-palette.git themes/flux-palette ; rm -rf !$/.git
+$ cp themes/flux-palette/_config.yml theme-config.yml ; rm -rf themes/flux-palette$ git clone --depth=1 https://github.com/LTDev-LLC/hexo-theme-flux-palette.git themes/flux-palette ; rm -rf !$/.git
 $ mv theme-config.yml themes/flux-palette/_config.yml
 ```
 
@@ -191,7 +190,7 @@ Create vertical timelines for project history, biographies, or changelogs.
 
 ### Media Embeds
 
-You can embed content from various platforms like YouTube, Spotify, Vimeo, Twitch, and TikTok within your posts using a powerful `embed` tag.
+You can embed content from platforms like YouTube, Spotify, Vimeo, Twitch, TikTok, GitHub Gist, JSFiddle, and CodeSandbox within your posts using a powerful `embed` tag.
 
 The plugin can automatically detect the platform from a URL.
 
@@ -204,8 +203,9 @@ The generic `embed` tag is the most flexible way to embed content.
 ```
 
 * `<url/id>`: The full URL or the ID of the content to embed.
-* `[platform_hint]`: (Optional) If you use an ID instead of a URL, you must provide a platform hint. Supported platforms: `youtube`, `spotify`, `vimeo`, `twitch`, `tiktok`.
+* `[platform_hint]`: (Optional) If you use an ID instead of a URL, you must provide a platform hint. Supported platforms: `youtube`, `spotify`, `vimeo`, `twitch`, `tiktok`, `gist`, `jsfiddle`, `codesandbox`.
 * `[type_hint]`: (Optional) For Spotify, you can specify `track`, `playlist`, `artist`, or `episode`. For Twitch, you can specify `video` or `channel`.
+* `CodeSandbox note`: the embed forces `view=editor+%2B+preview` so editor + preview is always visible.
 
 **Examples:**
 
@@ -238,6 +238,23 @@ date: 2025-12-1
 
 {# TikTok from URL #}
 {% embed https://www.tiktok.com/@scout2015/video/6718335390845095173 %}
+
+{# Gist from URL #}
+{% embed https://gist.github.com/paulirish/12fb951a8b893a454b32 %}
+
+{# JSFiddle from ID + hint #}
+{% embed 2v3L7m0q jsfiddle %}
+
+{# CodeSandbox from URL #}
+{% embed https://codesandbox.io/embed/new %}
+```
+
+You can also use direct provider tags:
+
+```md
+{% gist https://gist.github.com/paulirish/12fb951a8b893a454b32 %}
+{% jsfiddle 2v3L7m0q %}
+{% codesandbox https://codesandbox.io/embed/new %}
 ```
 
 #### Social Buttons Tag
@@ -273,53 +290,120 @@ project_tags: [swift, ios]
 project_summary: "A short description shown on the index page."
 buttons:
   - name: App Store
-    url: https://apple.com/
+    url: [https://apple.com/](https://apple.com/)...
   - name: GitHub
-    url: https://github.com/
+    url: [https://github.com/](https://github.com/)...
 ---
 Detailed project description goes here...
 ```
 
 ## Search Configuration
 
-Flux supports three search providers. Configure in `_config.yml`.
+Flux Palette supports flexible search providers, allowing you to choose between a simple local index or powerful cloud databases. Configure your preferred provider in `_config.yml`.
 
-### 1. Local (Default)
-
-Generates a `search.json` file. Best for static hosting with no backend.
+**Supported Providers:** `local`, `upstash`, `supabase`
 
 ```yml
 search:
   enabled: true
-  service: "local"
+  title: "Search"
+  service: "local" # Change to 'upstash' or 'supabase'
+  # ... provider specific config below
 ```
 
-### 2. Upstash (Redis)
+#### 1. Local Search (Default)
 
-High performance, serverless.
+Generates a `search.json` file at build time. Best for small static sites or when you want zero external dependencies.
+
+* **Pros:** Zero setup, completely free, works offline once loaded, private.
+* **Cons:** The entire index is downloaded by the client (can be heavy for large sites), basic "fuzzy" matching.
+
+#### 2. Upstash (Redis)
+
+Uses a serverless Redis database to store the index. This is the recommended option for performance and scalability.
+[Sign up at Upstash](https://upstash.com/)
+
+**Setup:**
+
+1. Create a Redis database in the Upstash console.
+2. Scroll down to the **REST API** section.
+3. Copy the `UPSTASH_REDIS_REST_URL`.
+4. Copy the `UPSTASH_REDIS_REST_TOKEN` (use this as your primary `token` for writing during builds).
+5. Copy a Read-Only token to enable search support on the client side as `read_token`.
+
+**Configuration:**
 
 ```yml
 search:
+  enabled: true
+  title: "Search"
   service: upstash
   upstash:
     url: "https://your-db.upstash.io"
-    token: "your_write_token"      # Used during 'hexo g'
-    read_token: "your_read_token"  # Exposed to client
-    index: "flux"
+    token: "your_primary_token" # Used during 'hexo generate' to upload index
+    read_token: "your_read_only_token" # Exposed to client for searching
+    index: "flux" # Prefix for keys
 ```
-### 3. Supabase (Postgres)
 
-Uses Postgres Full Text Search.
+* **Pros:** Extremely fast (millisecond latency), excellent fuzzy matching, generous free tier (10k req/day).
+* **Cons:** Requires an external account.
+
+#### 3. Supabase (PostgreSQL)
+
+Uses a Postgres database to store and query the index.
+[Sign up at Supabase](https://supabase.com/)
+
+**Setup:**
+
+1. Create a new project.
+2. Go to the **SQL Editor** and run the following commands to create tables and enable public read access:
+```sql
+-- Create Tables
+CREATE TABLE flux_search_docs (
+  id text PRIMARY KEY,
+  title text,
+  url text,
+  date text,
+  type text,
+  excerpt text,
+  encrypted boolean
+);
+CREATE TABLE flux_search_index (
+  word text PRIMARY KEY,
+  doc_ids text[]
+);
+
+-- Enable RLS
+ALTER TABLE flux_search_docs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flux_search_index ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read access
+CREATE POLICY "Public read docs" ON flux_search_docs FOR SELECT TO public USING (true);
+CREATE POLICY "Public read index" ON flux_search_index FOR SELECT TO public USING (true);
+```
+3. Go to **Project Settings > Data API**.
+4. Copy the **Project URL**.
+4. Go to **Project Settings > API Keys**.
+6. Copy the `Publishable Key` key (use as `pub_key` for reading).
+5. Copy the `Secret Keys` key (use as `sec_key` for writing).
+
+**Configuration:**
 
 ```yml
 search:
+  enabled: true
+  title: "Search"
   service: supabase
   supabase:
-    url: "https://your-proj.supabase.co"
-    sec_key: "service_role_key"    # Used during 'hexo g'
-    pub_key: "anon_public_key"     # Exposed to client
-    table: "flux_search"
+    url: "https://your-project.supabase.co"
+    sec_key: "your_service_role_key" # Used during 'hexo generate'
+    pub_key: "your_anon_key" # Exposed to client
+    table: "flux_search" # Prefix for tables (e.g. flux_search_docs)
 ```
+
+* **Pros:** Robust relational database, highly scalable, reliable ecosystem.
+* **Cons:** Requires running SQL setup commands manually as well as an external account.
+
 ## Comments
 
 Supports privacy-focused comment systems.

@@ -11,6 +11,12 @@ function detectPlatformFromUrl(url) {
         return 'twitch';
     if (/tiktok\.com/.test(url))
         return 'tiktok';
+    if (/gist\.github\.com/.test(url))
+        return 'gist';
+    if (/jsfiddle\.net/.test(url))
+        return 'jsfiddle';
+    if (/codesandbox\.io/.test(url))
+        return 'codesandbox';
     return null;
 }
 
@@ -256,12 +262,221 @@ function generateTikTokEmbed(input) {
     ].join('');
 }
 
+// Extract GitHub Gist reference
+function extractGistRef(input) {
+    if (!input)
+        return null;
+    const str = String(input).trim();
+
+    // Full URL
+    try {
+        const url = new URL(str);
+        if (url.hostname === 'gist.github.com') {
+            const parts = url.pathname.split('/').filter(Boolean);
+            if (parts.length >= 1) {
+                const id = parts[parts.length - 1];
+                if (/^[a-f0-9]+$/i.test(id)) {
+                    const user = parts.length >= 2 ? parts[0] : null,
+                        file = url.searchParams.get('file');
+                    return { user, id, file };
+                }
+            }
+        }
+    } catch {
+        // Ignore URL parse errors; we still support shorthand formats below.
+    }
+
+    // user/id shorthand
+    let match = str.match(/^([a-zA-Z0-9-]+)\/([a-f0-9]+)$/i);
+    if (match)
+        return { user: match[1], id: match[2], file: null };
+
+    // id shorthand
+    if (/^[a-f0-9]+$/i.test(str))
+        return { user: null, id: str, file: null };
+
+    return null;
+}
+
+// Generate GitHub Gist embed
+function generateGistEmbed(input) {
+    const ref = extractGistRef(input);
+    if (!ref)
+        return '';
+
+    const base = ref.user
+            ? `https://gist.github.com/${ref.user}/${ref.id}.js`
+            : `https://gist.github.com/${ref.id}.js`,
+        scriptUrl = ref.file ? `${base}?file=${encodeURIComponent(ref.file)}` : base;
+
+    return [
+        '<div class="gist-embed-inline">',
+        '  <script src="' + scriptUrl + '"></script>',
+        '</div>'
+    ].join('\n');
+}
+
+// Extract JSFiddle reference
+function extractJsFiddleRef(input) {
+    if (!input)
+        return null;
+    const str = String(input).trim();
+
+    // Full URL
+    try {
+        const url = new URL(str);
+        if (url.hostname === 'jsfiddle.net' || url.hostname.endsWith('.jsfiddle.net')) {
+            const parts = url.pathname.split('/').filter(Boolean);
+            if (!parts.length)
+                return null;
+
+            const embeddedIndex = parts.indexOf('embedded'),
+                trimmed = embeddedIndex === -1 ? parts : parts.slice(0, embeddedIndex);
+            if (!trimmed.length)
+                return null;
+
+            if (trimmed.length === 1)
+                return { user: null, id: trimmed[0], revision: null };
+
+            const user = trimmed[0],
+                id = trimmed[1],
+                revision = trimmed.length > 2 && /^\d+$/.test(trimmed[2]) ? trimmed[2] : null;
+
+            return { user, id, revision };
+        }
+    } catch {
+        // Ignore URL parse errors; we still support shorthand formats below.
+    }
+
+    // user/id shorthand, with optional revision
+    let match = str.match(/^([a-zA-Z0-9-_]+)\/([a-zA-Z0-9]+)(?:\/(\d+))?$/);
+    if (match)
+        return { user: match[1], id: match[2], revision: match[3] || null };
+
+    // id shorthand
+    if (/^[a-zA-Z0-9]+$/.test(str))
+        return { user: null, id: str, revision: null };
+
+    return null;
+}
+
+// Generate JSFiddle embed
+function generateJsFiddleEmbed(input) {
+    const ref = extractJsFiddleRef(input);
+    if (!ref)
+        return '';
+
+    let embedUrl = ref.user
+        ? `https://jsfiddle.net/${ref.user}/${ref.id}`
+        : `https://jsfiddle.net/${ref.id}`;
+    if (ref.revision)
+        embedUrl += `/${ref.revision}`;
+    embedUrl += '/embedded/';
+
+    return [
+        '<div class="video-embed-container" style="padding-top: 62.5%;">',
+        '  <iframe',
+        '    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"',
+        '    src="' + embedUrl + '"',
+        '    frameborder="0"',
+        '    allowfullscreen',
+        '    loading="lazy"',
+        '  ></iframe>',
+        '</div>'
+    ].join('\n');
+}
+
+// Extract CodeSandbox reference
+function extractCodeSandboxRef(input) {
+    if (!input)
+        return null;
+    const str = String(input).trim();
+
+    // Full URL
+    try {
+        const url = new URL(str);
+        if (url.hostname === 'codesandbox.io' || url.hostname.endsWith('.codesandbox.io')) {
+            const parts = url.pathname.split('/').filter(Boolean),
+                search = url.search || '';
+            if (!parts.length)
+                return null;
+
+            // Already an embed URL
+            if (parts[0] === 'embed' && parts[1])
+                return { mode: 'embed', slug: parts[1], search: search };
+
+            // Legacy short links: /s/<slug>
+            if (parts[0] === 's' && parts[1])
+                return { mode: 'short', slug: parts[1], search: search };
+
+            // New project links: /p/<kind>/<slug>
+            if (parts[0] === 'p' && parts[1] && parts[2])
+                return { mode: 'project', kind: parts[1], slug: parts[2], search: search };
+        }
+    } catch {
+        // Ignore URL parse errors; we still support shorthand formats below.
+    }
+
+    // /p/<kind>/<slug> shorthand
+    let match = str.match(/^p\/([a-zA-Z0-9-_]+)\/([a-zA-Z0-9-_]+)$/);
+    if (match)
+        return { mode: 'project', kind: match[1], slug: match[2], search: '' };
+
+    // /s/<slug> shorthand
+    match = str.match(/^s\/([a-zA-Z0-9-_]+)$/);
+    if (match)
+        return { mode: 'short', slug: match[1], search: '' };
+
+    // Raw slug shorthand
+    if (/^[a-zA-Z0-9-_]+$/.test(str))
+        return { mode: 'short', slug: str, search: '' };
+
+    return null;
+}
+
+// Generate CodeSandbox embed
+function generateCodeSandboxEmbed(input) {
+    const ref = extractCodeSandboxRef(input);
+    if (!ref)
+        return '';
+
+    const params = new URLSearchParams(ref.search);
+    params.set('view', 'editor + preview');
+
+    let embedUrl;
+    if (ref.mode === 'project') {
+        if (!params.has('embed'))
+            params.set('embed', '1');
+        const query = params.toString();
+        embedUrl = `https://codesandbox.io/p/${ref.kind}/${ref.slug}${query ? '?' + query : ''}`;
+    } else {
+        const query = params.toString();
+        embedUrl = `https://codesandbox.io/embed/${ref.slug}${query ? '?' + query : ''}`;
+    }
+
+    return [
+        '<div class="video-embed-container" style="padding-top: 62.5%;">',
+        '  <iframe',
+        '    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"',
+        '    src="' + embedUrl + '"',
+        '    frameborder="0"',
+        '    allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"',
+        '    allowfullscreen',
+        '    loading="lazy"',
+        '  ></iframe>',
+        '</div>'
+    ].join('\n');
+}
+
 
 // Generic 'embed' tag
 //      {% embed <url/id> [hint] %}
 //      {% embed <url/id> youtube %}
 //      {% embed <url/id> vimeo %}
 //      {% embed <url/id> spotify [track/playlist/artist/episode] %}
+//      {% embed <url/id> gist %}
+//      {% embed <url/id> jsfiddle %}
+//      {% embed <url/id> codesandbox %}
 hexo.extend.tag.register('embed', function (args) {
     if (!args || !args.length)
         return '';
@@ -286,6 +501,12 @@ hexo.extend.tag.register('embed', function (args) {
             return generateTwitchEmbed(input, forcedTwitchType);
         case 'tiktok':
             return generateTikTokEmbed(input);
+        case 'gist':
+            return generateGistEmbed(input);
+        case 'jsfiddle':
+            return generateJsFiddleEmbed(input);
+        case 'codesandbox':
+            return generateCodeSandboxEmbed(input);
         default:
             return '';
     }
@@ -304,6 +525,9 @@ const embedTags = {
         return generateTwitchEmbed(args[0], forcedType);
     },
     tiktok: (args) => generateTikTokEmbed(args.join(' ')),
+    gist: (args) => generateGistEmbed(args.join(' ')),
+    jsfiddle: (args) => generateJsFiddleEmbed(args.join(' ')),
+    codesandbox: (args) => generateCodeSandboxEmbed(args.join(' ')),
 };
 
 // Loop the embed tags and register them
