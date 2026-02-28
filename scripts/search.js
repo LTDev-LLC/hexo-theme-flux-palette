@@ -11,6 +11,10 @@ const providers = [
     'supabase'
 ];
 
+// Reserved placeholders kept in Supabase tables (excluded from rebuild writes)
+const SUPABASE_PLACEHOLDER_ID = 'placeholder',
+    SUPABASE_PLACEHOLDER_WORD = 'placeholder';
+
 // Basic HTML stripper for search index content
 function stripHtml(str) {
     return String(str || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -307,19 +311,22 @@ hexo.extend.filter.register('after_generate', async function () {
         case 'supabase':
             const tDocs = (sb.table || 'flux_search') + '_docs',
                 tIndex = (sb.table || 'flux_search') + '_index',
-                indexList = Array.from(wordMap).map(([w, ids]) => ({ word: w, doc_ids: Array.from(ids) }));
+                safeDocList = docList.filter(doc => doc.id !== SUPABASE_PLACEHOLDER_ID),
+                indexList = Array.from(wordMap)
+                    .filter(([w]) => w !== SUPABASE_PLACEHOLDER_WORD)
+                    .map(([w, ids]) => ({ word: w, doc_ids: Array.from(ids) }));
             try {
                 ctx.log.info(`[supabase] Clearing old data...`);
 
                 // Clear old data
-                await supabaseRequest(sb.url, sb.sec_key, `${tDocs}?id=neq.placeholder`, 'DELETE');
-                await supabaseRequest(sb.url, sb.sec_key, `${tIndex}?word=neq.placeholder`, 'DELETE');
+                await supabaseRequest(sb.url, sb.sec_key, `${tDocs}?id=neq.${SUPABASE_PLACEHOLDER_ID}`, 'DELETE');
+                await supabaseRequest(sb.url, sb.sec_key, `${tIndex}?word=neq.${SUPABASE_PLACEHOLDER_WORD}`, 'DELETE');
 
-                ctx.log.info(`[supabase] Uploading ${docs.length} docs & ${indexList.length} keywords...`);
+                ctx.log.info(`[supabase] Uploading ${safeDocList.length} docs & ${indexList.length} keywords...`);
 
                 // Upload docs to Supabase
-                for (let i = 0; i < docList.length; i += 100)
-                    await supabaseRequest(sb.url, sb.sec_key, tDocs, 'POST', docList.slice(i, i + 100));
+                for (let i = 0; i < safeDocList.length; i += 100)
+                    await supabaseRequest(sb.url, sb.sec_key, tDocs, 'POST', safeDocList.slice(i, i + 100));
 
                 // Upload index to Supabase
                 for (let i = 0; i < indexList.length; i += 500)
