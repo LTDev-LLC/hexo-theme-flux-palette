@@ -21,10 +21,12 @@
         projects = allProjects.slice(start, end);
 
     // Pagination for projects mode
-    var projPrev = current > 1 ? current - 1 : 0,
+    var paginationDir = config.pagination_dir || 'page',
+        projectsBase = '/projects/',
+        projPrev = current > 1 ? current - 1 : 0,
         projNext = current < totalPages ? current + 1 : 0,
-        projPrevLink = projPrev > 0 ? (projPrev === 1 ? '/' : '/page/' + projPrev + '/') : '',
-        projNextLink = projNext > 0 ? '/page/' + projNext + '/' : '';
+        projPrevLink = projPrev > 0 ? (projPrev === 1 ? projectsBase : projectsBase + paginationDir + '/' + projPrev + '/') : '',
+        projNextLink = projNext > 0 ? projectsBase + paginationDir + '/' + projNext + '/' : '';
   %>
 
   <% if (projects.length) { %>
