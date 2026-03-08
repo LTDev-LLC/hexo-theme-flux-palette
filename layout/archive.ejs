@@ -1,16 +1,111 @@
 <section class="archive">
-  <h1>Archives</h1>
-  <% var years = {}; %>
-  <% site.posts.sort('date', -1).forEach(function(post) {
-       var y = post.date.year();
-       years[y] = years[y] || [];
-       years[y].push(post);
-     });
+  <%
+    var archiveDir = String(config.archive_dir || 'archives').replace(/^\/+|\/+$/g, ''),
+      archivePath = String(page.path || '').replace(/^\/+/, ''),
+      archiveCfg = theme.archive || {},
+      yearsPerPage = parseInt(archiveCfg.years_per_page, 10),
+      now = Date.now(),
+      allPosts = [],
+      years = {},
+      yearKeys = [],
+      visibleYears = [],
+      current = parseInt(page.current || 1, 10),
+      totalPages = 1,
+      prev = 0,
+      next = 0,
+      prevLink = '',
+      nextLink = '',
+      isArchiveIndexRoute =
+        archivePath === `${archiveDir}/index.html` ||
+        archivePath === `${archiveDir}/` ||
+        new RegExp(`^${archiveDir}/page/\\d+/index\\.html$`).test(archivePath);
+
+    if (!Number.isFinite(yearsPerPage) || yearsPerPage < 1) {
+      yearsPerPage = 1;
+    }
+
+    if (!Number.isFinite(current) || current < 1) {
+      current = 1;
+    }
+
+    if (isArchiveIndexRoute) {
+      if (site.posts) {
+        if (typeof site.posts.toArray === 'function') {
+          allPosts = site.posts.toArray();
+        } else if (Array.isArray(site.posts)) {
+          allPosts = site.posts.slice();
+        } else if (Array.isArray(site.posts.data)) {
+          allPosts = site.posts.data.slice();
+        }
+      }
+
+      allPosts = allPosts.filter(function(post) {
+        if (post.published === false) return false;
+        if (!config.render_drafts && post.draft) return false;
+        if (!config.future && post.date && post.date.valueOf() > now) return false;
+        return true;
+      });
+    } else if (page.posts) {
+      if (typeof page.posts.toArray === 'function') {
+        allPosts = page.posts.toArray();
+      } else if (Array.isArray(page.posts)) {
+        allPosts = page.posts.slice();
+      } else if (Array.isArray(page.posts.data)) {
+        allPosts = page.posts.data.slice();
+      }
+    }
+
+    allPosts.sort(function(a, b) {
+      return b.date - a.date;
+    });
+
+    allPosts.forEach(function(post) {
+      var y = post.date.year();
+      years[y] = years[y] || [];
+      years[y].push(post);
+    });
+
+    yearKeys = Object.keys(years).sort(function(a, b) { return b - a; });
+
+    if (isArchiveIndexRoute) {
+      totalPages = Math.max(1, Math.ceil(yearKeys.length / yearsPerPage));
+      if (current > totalPages) {
+        current = totalPages;
+      }
+
+      visibleYears = yearKeys.slice((current - 1) * yearsPerPage, current * yearsPerPage);
+      prev = current > 1 ? current - 1 : 0;
+      next = current < totalPages ? current + 1 : 0;
+
+      if (prev) {
+        prevLink = prev === 1 ? `${archiveDir}/` : `${archiveDir}/page/${prev}/`;
+      }
+      if (next) {
+        nextLink = `${archiveDir}/page/${next}/`;
+      }
+    } else {
+      visibleYears = yearKeys;
+      prev = page.prev || 0;
+      next = page.next || 0;
+      prevLink = page.prev_link || '';
+      nextLink = page.next_link || '';
+    }
   %>
-  <% Object.keys(years).sort(function(a,b){return b-a;}).forEach(function(year) { %>
+
+  <h1><%= page.title || 'Archives' %></h1>
+
+  <% if (!allPosts.length) { %>
+  <p>No archived posts found.</p>
+  <% } %>
+
+  <% visibleYears.forEach(function(year) { %>
   <div class="archive-year">
-    <h2><%= year %></h2>
-    <ul>
+    <h2>
+      <%= year %>
+      <span class="archive-year-count"><%= years[year].length %></span>
+    </h2>
+    <div class="archive-year-scroll">
+      <ul class="archive-year-list">
       <% years[year].forEach(function(post) { %>
       <li>
         <span class="archive-date">
@@ -22,7 +117,24 @@
         <% } %>
       </li>
       <% }) %>
-    </ul>
+      </ul>
+    </div>
   </div>
   <% }) %>
+
+  <% if (prev || next) { %>
+  <nav class="pagination archive-pagination">
+    <% if (prev) { %>
+    <a class="prev" href="<%= url_for(prevLink) %>">
+      &laquo; Newer
+    </a>
+    <% } %>
+    <span class="meta-sep">&nbsp;</span>
+    <% if (next) { %>
+    <a class="next" href="<%= url_for(nextLink) %>">
+      Older &raquo;
+    </a>
+    <% } %>
+  </nav>
+  <% } %>
 </section>

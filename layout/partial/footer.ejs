@@ -1,6 +1,43 @@
 <div class="footer-inner">
+  <%
+    var feedsCfg = theme.feeds || {},
+      feedsEnabled = feedsCfg.enabled !== false,
+      toPath = function (target) {
+        return '/' + String(target || '').replace(/^\/+/, '');
+      },
+      rssCfg = feedsCfg.rss || {},
+      atomCfg = feedsCfg.atom || feedsCfg.attom || {},
+      sitemapCfg = feedsCfg.sitemap || {},
+      rssEnabled = feedsEnabled && rssCfg.enabled !== false,
+      atomEnabled = feedsEnabled && atomCfg.enabled !== false,
+      sitemapEnabled = feedsEnabled && sitemapCfg.enabled !== false,
+      rssFooter = rssCfg.footer !== false,
+      atomFooter = atomCfg.footer !== false,
+      sitemapFooter = sitemapCfg.footer !== false,
+      rssLinkEnabled = rssEnabled && rssFooter,
+      atomLinkEnabled = atomEnabled && atomFooter,
+      sitemapLinkEnabled = sitemapEnabled && sitemapFooter,
+      rssPath = rssCfg.path || 'rss.xml',
+      atomPath = atomCfg.path || 'atom.xml',
+      sitemapPath = sitemapCfg.path || 'sitemap.xml';
+  %>
   <div class="footer-left">
-    &copy; <%= new Date().getFullYear() %> <%= config.author %>
+    <div class="footer-copyright">
+      &copy; <%= new Date().getFullYear() %> <%= config.author %>
+    </div>
+    <% if (rssLinkEnabled || atomLinkEnabled || sitemapLinkEnabled) { %>
+    <div class="footer-feed-links">
+      <% if (rssLinkEnabled) { %>
+      <a class="footer-feed-link" href="<%= url_for(toPath(rssPath)) %>" data-no-view-transition="true">RSS</a>
+      <% } %>
+      <% if (atomLinkEnabled) { %>
+      <a class="footer-feed-link" href="<%= url_for(toPath(atomPath)) %>" data-no-view-transition="true">Atom</a>
+      <% } %>
+      <% if (sitemapLinkEnabled) { %>
+      <a class="footer-feed-link" href="<%= url_for(toPath(sitemapPath)) %>" data-no-view-transition="true">Sitemap</a>
+      <% } %>
+    </div>
+    <% } %>
   </div>
 
   <% if (theme.attribution && theme.attribution.enabled) { %>

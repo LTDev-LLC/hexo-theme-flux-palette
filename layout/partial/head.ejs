@@ -6,7 +6,12 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png" />
 <link rel="manifest" href="/images/favicon/site.webmanifest" />
 <%
-    var pageTitle = (page.title ? page.title + ' | ' : '') + config.title + (config.subtitle ? ' ' + config.subtitle : ''),
+    var resolvedPageTitle = page.title || '';
+    if (!resolvedPageTitle && typeof is_category === 'function' && is_category() && page.category) {
+        resolvedPageTitle = 'Category: ' + (page.category.name || page.category);
+    }
+
+    var pageTitle = (resolvedPageTitle ? resolvedPageTitle + ' | ' : '') + config.title + (config.subtitle ? ' ' + config.subtitle : ''),
         description = page.description || page.excerpt || page.content || config.description || '';
     if (description) {
         description = strip_html(description).substring(0, 200).replace(/^\s+|\s+$/g, '');

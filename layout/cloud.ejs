@@ -1,0 +1,50 @@
+<section class="post-index cloud-page">
+  <h1 class="page-title"><%= page.title || 'Cloud' %></h1>
+
+  <% var hasCategories = page.categories && page.categories.length; %>
+  <% var hasTags = page.tags && page.tags.length; %>
+
+  <% if (hasCategories) { %>
+  <section class="cloud-section">
+    <h2 class="cloud-section-title"><%= page.categories_title || 'Categories' %></h2>
+    <p class="cloud-summary">
+      <%= page.categories.length %> categories
+    </p>
+
+    <div class="cloud-list" role="list" aria-label="Category cloud">
+      <% page.categories.forEach(function(category) { %>
+      <a class="cloud-item" role="listitem" href="<%= url_for(category.path) %>" style="font-size:<%= category.size %>rem; --cloud-weight:<%= category.weight %>; --cloud-opacity:<%= category.opacity %>;" title="<%= category.name %> (<%= category.count %>)">
+        <span class="cloud-name"><%= category.name %></span>
+        <span class="cloud-count"><%= category.count %></span>
+      </a>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <% if (hasCategories && hasTags) { %>
+  <hr class="cloud-break" aria-hidden="true">
+  <% } %>
+
+  <% if (hasTags) { %>
+  <section class="cloud-section">
+    <h2 class="cloud-section-title"><%= page.tags_title || 'Tags' %></h2>
+    <p class="cloud-summary">
+      <%= page.tags.length %> tags
+    </p>
+
+    <div class="cloud-list" role="list" aria-label="Tag cloud">
+      <% page.tags.forEach(function(tag) { %>
+      <a class="cloud-item" role="listitem" href="<%= url_for(tag.path) %>" style="font-size:<%= tag.size %>rem; --cloud-weight:<%= tag.weight %>; --cloud-opacity:<%= tag.opacity %>;" title="<%= tag.name %> (<%= tag.count %>)">
+        <span class="cloud-name"><%= tag.name %></span>
+        <span class="cloud-count"><%= tag.count %></span>
+      </a>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <% if (!hasCategories && !hasTags) { %>
+  <p>No categories or tags are available yet.</p>
+  <% } %>
+</section>

@@ -9,8 +9,8 @@ menu:
   Projects: /projects/
   Misc:
     Archives: /archives/
+    Cloud: /cloud/
     Search: /search/
-    Feed: /rss.xml "data-no-view-transition='true'"
 
 # --- LAYOUT & APPEARANCE ---
 # Controls the visual structure and default themes
@@ -20,26 +20,52 @@ home:
 blog:
   title: "Blog" # Display title for the blog index
 
+# Project index configuration
 projects:
   title: "Projects" # Display title for the projects index
-  per_page: 10     # Projects per page (Falls back to global per_page)
+  per_page: 10 # Projects per page (Falls back to global per_page)
 
+# Sidebar configuration
 sidebar:
   recent_projects:
     enabled: true
-    limit: 5       # Max items to show in the projects sidebar section
+    limit: 5 # Max items to show in the projects sidebar section
   social_buttons:
     enabled: true
-    size: 1.6em    # Icon size for social links
+    size: 1.6em # Icon size for social links
   palette_selector:
-    enabled: true  # Allow users to switch color palettes
-    default_dark: solar-amber    # Default theme for dark mode
-    default_light: paper-and-ink  # Default theme for light mode
+    enabled: true # Allow users to switch color palettes
+    default_dark: solar-amber # Default theme for dark mode
+    default_light: paper-and-ink # Default theme for light mode
     palette_folder: css/palettes # Location of palette CSS files
+
+# Archive page configuration
+archive:
+  years_per_page: 5 # paginate /archives/ by year groups
 
 # Back to top floating button
 backtotop:
   enabled: true
+
+# Cloud (tag and category) pages
+cloud:
+  enabled: true # set to false to disable the cloud page
+  path: cloud/ # output path for the page
+  title: "Cloud"
+  sort_by: count # Options: 'count' or 'name'
+  sort_order: desc # Options: 'desc' or 'asc'
+  min_size: 0.95 # smallest cloud text size in rem
+  max_size: 2.2 # largest cloud text size in rem
+  categories:
+    enabled: true
+    title: "Categories"
+    path: categories/ # cloud index page path for categories
+    page_title: "Categories"
+  tags:
+    enabled: true
+    title: "Tags"
+    path: tags/ # cloud index page path for tags
+    page_title: "Tags"
 
 # --- FUNCTIONAL SYSTEMS ---
 # Features for content enhancement and performance
@@ -51,13 +77,13 @@ search:
   service: "local"
   upstash:
     url: "https://your-db.upstash.io"
-    token: "your_primary_token"      # For build-time indexing
+    token: "your_primary_token" # For build-time indexing
     read_token: "your_read_only_token" # For client-side searching
     index: "flux"
   supabase:
     url: "https://your-project.supabase.co"
     sec_key: "your_service_role_key" # For build-time indexing
-    pub_key: "your_anon_key"         # For client-side searching
+    pub_key: "your_anon_key" # For client-side searching
     table: "flux_search"
 
 # Asset Optimization (Pre-compiles JS using SWC)
@@ -79,6 +105,38 @@ gallery:
   thumbnails: true
   # External thumbnail service (%s is the image URL)
   service_pattern: "https://wsrv.nl/?url=%s&w=300&h=300&fit=inside&q=80"
+
+# RSS, Atom, and Sitemap generation
+feeds:
+  enabled: true # set to false to turn off all feed generation
+  limit: 20 # number of posts in rss/atom
+  include_drafts: false
+  include_future: false
+  summary_length: 300 # max plain text summary per item
+  mark_encrypted_in_title: true # prefix [Encrypted] to titles
+  add_encrypted_element: true # add <encrypted>true</encrypted>
+  rss:
+    enabled: true
+    path: rss.xml # output file (relative to root)
+    footer: true # show rss.xml link in footer
+  atom:
+    enabled: true
+    path: atom.xml # output file (relative to root)
+    footer: true # show atom.xml link in footer
+  sitemap:
+    enabled: true
+    path: sitemap.xml # output file (relative to root)
+    footer: true # show sitemap.xml link in footer
+    include_home: true
+    include_posts: true
+    include_pages: true
+    include_archives: true
+    include_categories: true
+    include_tags: true
+    include_projects: true
+    include_search_page: true
+    exclude:
+      - 404.html
 
 # URL Shortener (Generates /s/<hash> redirects)
 short_url:

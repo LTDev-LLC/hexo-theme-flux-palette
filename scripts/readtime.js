@@ -44,7 +44,7 @@ function getFilePath(data, ctx) {
     return null;
 }
 
-// Inject Front Matter into the file using Regex to preserve comments/formatting.
+// Inject Front Matter into the file using Regex to preserve comments/formatting
 function injectFrontMatter(ctx, filePath, info) {
     if (!fs.existsSync(filePath)) {
         ctx.log.error(`[ReadTime] File not found: ${filePath}`);
